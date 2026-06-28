@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>InfluêncIA - Gerador de Scripts para TikTok</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      color: #222;
+      min-height: 100vh;
+    }
+
+    .screen { display: none; }
+    .screen.active { display: block; }
+
+    /* LOGIN / REGISTER */
+    .auth-wrapper {
+      max-width: 380px;
+      margin: 3rem auto;
+      padding: 0 1rem;
+    }
+
+    .logo {
+      font-size: 26px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .logo span { color: #7F77DD; }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 2rem;
+    }
+
+    .card {
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .field { margin-bottom: 1rem; }
+
+    .field label {
+      display: block;
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 6px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      border-color: #7F77DD;
+    }
+
+    .field textarea {
+      height: 80px;
+      resize: none;
+    }
+
+    .btn-primary {
+      width: 100%;
+      background: #7F77DD;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      padding: 11px;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 0.5rem;
+      transition: background 0.2s;
+    }
+
+    .btn-primary:hover { background: #534AB7; }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: #7F77DD;
+      font-size: 13px;
+      cursor: pointer;
+      padding: 0;
+      text-decoration: underline;
+    }
+
+    .divider {
+      text-align: center;
+      font-size: 13px;
+      color: #999;
+      margin: 1rem 0;
+    }
+
+    .error {
+      font-size: 13px;
+      color: #e24b4a;
+      margin-top: 8px;
+      display: none;
+    }
+
+    /* PAINEL */
+    .painel-wrapper {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 0 1rem 3rem;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 0;
+      border-bottom: 1px solid #e0e0e0;
+      margin-bottom: 2rem;
+    }
+
+    .nav-logo {
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .nav-logo span { color: #7F77DD; }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: #666;
+    }
+
+    .avatar {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #EEEDFE;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+      color: #534AB7;
+    }
+
+    .logout-btn {
+      background: none;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 13px;
+      color: #666;
+      cursor: pointer;
+    }
+
+    .logout-btn:hover { background: #f0f0f0; }
+
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      background: #EEEDFE;
+      color: #534AB7;
+      border-radius: 99px;
+      padding: 4px 12px;
+      margin-bottom: 1rem;
+    }
+
+    .section-title {
+      font-size: 20px;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .section-sub {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 1.5rem;
+    }
+
+    .result-box {
+      background: #f9f9f9;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 14px;
+      line-height: 1.8;
+      color: #222;
+      white-space: pre-wrap;
+      min-height: 80px;
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .loading {
+      font-size: 13px;
+      color: #888;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .copy-btn {
+      margin-top: 10px;
+      background: none;
+      border: 1px solid #7F77DD;
+      color: #7F77DD;
+      border-radius: 8px;
+      padding: 7px 16px;
+      font-size: 13px;
+      cursor: pointer;
+      display: none;
+    }
+
+    .copy-btn:hover { background: #EEEDFE; }
+  </style>
+</head>
+<body>
+
+  <!-- TELA DE LOGIN -->
+  <div id="login-screen" class="screen active">
+    <div class="auth-wrapper">
+      <div class="logo"><span>✦</span> InfluêncIA</div>
+      <p class="subtitle">Crie scripts de venda com IA para o TikTok</p>
+      <div class="card">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="login-user" placeholder="seu usuário" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="login-pass" placeholder="sua senha" />
+        </div>
+        <p class="error" id="login-error">Usuário ou senha incorretos</p>
+        <button class="btn-primary" onclick="doLogin()">Entrar</button>
+        <div class="divider">ou</div>
+        <div style="text-align:center">
+          <button class="link-btn" onclick="showRegister()">Criar conta grátis</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA DE CADASTRO -->
+  <div id="register-screen" class="screen">
+    <div class="auth-wrapper">
+      <div class="logo"><span>✦</span> InfluêncIA</div>
+      <p class="subtitle">Crie sua conta e comece agora</p>
+      <div class="card">
+        <div class="field">
+          <label>Usuário</label>
+          <input type="text" id="reg-user" placeholder="escolha um usuário" />
+        </div>
+        <div class="field">
+          <label>Senha</label>
+          <input type="password" id="reg-pass" placeholder="crie uma senha" />
+        </div>
+        <p class="error" id="reg-error">Usuário já existe</p>
+        <button class="btn-primary" onclick="doRegister()">Criar conta</button>
+        <div class="divider">ou</div>
+        <div style="text-align:center">
+          <button class="link-btn" onclick="showLogin()">Já tenho conta</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL PRINCIPAL -->
+  <div id="painel-screen" class="screen">
+    <div class="painel-wrapper">
+      <div class="nav">
+        <div class="nav-logo"><span>✦</span> InfluêncIA</div>
+        <div class="nav-user">
+          <div class="avatar" id="user-avatar">T</div>
+          <span id="user-name">usuário</span>
+          <button class="logout-btn" onclick="doLogout()">Sair</button>
+        </div>
+      </div>
+
+      <div class="tag">✦ Gerador de scripts com IA</div>
+      <p class="section-title">Criar script de venda</p>
+      <p class="section-sub">Preencha os campos abaixo e a IA cria um script pronto para você gravar no TikTok.</p>
+
+      <div class="card">
+        <div class="field">
+          <label>Produto ou serviço</label>
+          <input type="text" id="produto" placeholder="ex: Curso de maquiagem online" />
+        </div>
+        <div class="field">
+          <label>Nicho</label>
+          <select id="nicho">
+            <option value="beleza">Beleza e maquiagem</option>
+            <option value="moda">Moda e estilo</option>
+            <option value="educação" selected>Educação e cursos</option>
+            <option value="fitness">Fitness e saúde</option>
+            <option value="finanças">Finanças pessoais</option>
+            <option value="tecnologia">Tecnologia</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Tom do script</label>
+          <select id="tom">
+            <option value="animado" selected>Animado e empolgante</option>
+            <option value="sério">Sério e profissional</option>
+            <option value="engraçado">Divertido e engraçado</option>
+            <option value="motivacional">Motivacional</option>
+          </select>
+        </div>
+
+        <button class="btn-primary" onclick="gerarScript()">✦ Gerar script com IA</button>
+        <p class="loading" id="loading-msg">⏳ Gerando seu script, aguarde alguns segundos...</p>
+        <div class="result-box" id="result-box"></div>
+        <button class="copy-btn" id="copy-btn" onclick="copiarScript()">Copiar script</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let token = '';
+    const API = 'http://127.0.0.1:8000';
+
+    function show(id) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.getElementById(id).classList.add('active');
+    }
+
+    function showLogin() { show('login-screen'); }
+    function showRegister() { show('register-screen'); }
+
+    async function doLogin() {
+      const user = document.getElementById('login-user').value.trim();
+      const pass = document.getElementById('login-pass').value;
+      const err = document.getElementById('login-error');
+      err.style.display = 'none';
+      if (!user || !pass) { err.textContent = 'Preencha todos os campos'; err.style.display = 'block'; return; }
+      try {
+        const r = await fetch(API + '/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const d = await r.json();
+        if (!r.ok) { err.textContent = d.detail || 'Usuário ou senha incorretos'; err.style.display = 'block'; return; }
+        token = d.access_token;
+        document.getElementById('user-name').textContent = user;
+        document.getElementById('user-avatar').textContent = user[0].toUpperCase();
+        show('painel-screen');
+      } catch (e) {
+        err.textContent = 'Erro ao conectar. O servidor está rodando?';
+        err.style.display = 'block';
+      }
+    }
+
+    async function doRegister() {
+      const user = document.getElementById('reg-user').value.trim();
+      const pass = document.getElementById('reg-pass').value;
+      const err = document.getElementById('reg-error');
+      err.style.display = 'none';
+      if (!user || !pass) { err.textContent = 'Preencha todos os campos'; err.style.display = 'block'; return; }
+      try {
+        const r = await fetch(API + '/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ username: user, password: pass })
+        });
+        const d = await r.json();
+        if (!r.ok) { err.textContent = d.detail || 'Erro ao criar conta'; err.style.display = 'block'; return; }
+        document.getElementById('login-user').value = user;
+        document.getElementById('login-pass').value = pass;
+        showLogin();
+        doLogin();
+      } catch (e) {
+        err.textContent = 'Erro ao conectar. O servidor está rodando?';
+        err.style.display = 'block';
+      }
+    }
+
+    async function gerarScript() {
+      const produto = document.getElementById('produto').value.trim();
+      if (!produto) { alert('Digite o nome do produto!'); return; }
+      const nicho = document.getElementById('nicho').value;
+      const tom = document.getElementById('tom').value;
+      const loading = document.getElementById('loading-msg');
+      const box = document.getElementById('result-box');
+      const copyBtn = document.getElementById('copy-btn');
+      loading.style.display = 'block';
+      box.style.display = 'none';
+      copyBtn.style.display = 'none';
+      try {
+        const r = await fetch(API + '/gerar-script', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + token
+          },
+          body: JSON.stringify({ produto, nicho, tom })
+        });
+        const d = await r.json();
+        box.textContent = d.script;
+        box.style.display = 'block';
+        copyBtn.style.display = 'inline-block';
+      } catch (e) {
+        box.textContent = 'Erro ao gerar script. Verifique se o servidor está rodando.';
+        box.style.display = 'block';
+      }
+      loading.style.display = 'none';
+    }
+
+    function copiarScript() {
+      const texto = document.getElementById('result-box').textContent;
+      navigator.clipboard.writeText(texto).then(() => {
+        document.getElementById('copy-btn').textContent = 'Copiado!';
+        setTimeout(() => { document.getElementById('copy-btn').textContent = 'Copiar script'; }, 2000);
+      });
+    }
+
+    function doLogout() {
+      token = '';
+      document.getElementById('login-user').value = '';
+      document.getElementById('login-pass').value = '';
+      showLogin();
+    }
+  </script>
+</body>
+</html>

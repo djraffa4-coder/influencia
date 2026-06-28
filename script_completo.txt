@@ -1,0 +1,330 @@
+<script>
+const API = "";
+var token = "";
+var perfilAtual = "rafaela";
+var currentTalkId = "";
+var uploadedImageB64 = "";
+var proUploadB64 = "";
+
+function showLogin(){document.getElementById("app-screen").style.display="none";document.getElementById("login-screen").style.display="flex";}
+function showApp(username){document.getElementById("login-screen").style.display="none";document.getElementById("app-screen").style.display="flex";document.getElementById("user-name-top").textContent=username;document.getElementById("user-avatar").textContent=username[0].toUpperCase();carregarCreditos();}
+function showRegister(){document.getElementById("register-section").style.display="block";}
+async function doLogin(){
+    var u=document.getElementById("login-user").value.trim();
+    var p=document.getElementById("login-pass").value.trim();
+    var err=document.getElementById("login-err");
+    err.style.display="none";
+    try{
+        var r=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+        var d=await r.json();
+        if(d.access_token){token=d.access_token;showApp(u);}
+        else{err.textContent=d.detail||"Erro ao entrar.";err.style.display="block";}
+    }catch(e){err.textContent="Erro ao conectar.";err.style.display="block";}
+}
+async function doRegister(){
+    var u=document.getElementById("reg-user").value.trim();
+    var p=document.getElementById("reg-pass").value.trim();
+    var r=await fetch(API+"/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+    var d=await r.json();
+    if(d.msg){alert("Conta criada! Faca login.");}
+    else{alert(d.detail||"Erro ao criar conta.");}
+}
+function doLogout(){token="";currentTalkId="";showLogin();}
+function showPage(page,el){
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    document.querySelectorAll(".sidebar-item").forEach(function(i){i.classList.remove("active");});
+    document.getElementById("page-"+page).classList.add("active");
+    if(el)el.classList.add("active");
+}
+function setExemplo(val){document.getElementById("produto").value=val;document.getElementById("char-count").textContent=val.length+"/100";}
+function selecionarPerfil(perfil,el){
+    perfilAtual=perfil;
+    document.querySelectorAll(".perfil-card").forEach(function(c){c.classList.remove("ativo");});
+    el.classList.add("ativo");
+    var custom=document.getElementById("custom-perfil");
+    if(custom)custom.style.display=perfil==="custom"?"block":"none";
+}
+function atualizarCamposCustom(genero){
+    var sc=document.getElementById("custom-cabelo");
+    var se=document.getElementById("custom-estilo");
+    var sx=document.getElementById("custom-expressao");
+    if(genero==="masculino"){
+        sc.innerHTML="<option value='short dark hair'>Curto escuro</option><option value='short blonde hair'>Curto loiro</option><option value='short brown hair'>Curto castanho</option><option value='curly dark hair'>Cacheado escuro</option>";
+        se.innerHTML="<option value='fitness influencer, sportswear'>Fitness</option><option value='business casual, elegant'>Executivo</option><option value='streetwear, casual urban'>Streetwear</option><option value='luxury lifestyle, premium outfit'>Luxo</option>";
+        sx.innerHTML="<option value='confident smile'>Sorriso confiante</option><option value='serious strong look'>Olhar forte</option><option value='friendly energetic expression'>Expressao energetica</option><option value='charismatic smile'>Sorriso carismatico</option>";
+    }else{
+        sc.innerHTML="<option value='long blonde hair'>Longo loiro</option><option value='long dark brown hair'>Longo moreno</option><option value='long black hair'>Longo preto</option><option value='long red hair'>Longo ruivo</option><option value='curly black hair'>Cacheado preto</option>";
+        se.innerHTML="<option value='fashion influencer, trendy outfit'>Fashion</option><option value='fitness influencer, sports outfit'>Fitness</option><option value='luxury lifestyle, elegant outfit'>Luxo</option><option value='casual street style'>Casual</option>";
+        sx.innerHTML="<option value='energetic smile'>Sorriso energetico</option><option value='confident look'>Olhar confiante</option><option value='friendly smile'>Sorriso amigavel</option><option value='serious professional look'>Expressao seria</option>";
+    }
+}
+function handleUpload(input){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){uploadedImageB64=e.target.result.split(",")[1];document.getElementById("upload-thumb").src=e.target.result;document.getElementById("upload-name").textContent=file.name;document.getElementById("upload-size").textContent=(file.size/1024).toFixed(0)+" KB";document.getElementById("upload-preview-area").style.display="flex";document.getElementById("upload-area").style.display="none";};
+    reader.readAsDataURL(file);
+}
+function removeUpload(){uploadedImageB64="";document.getElementById("file-input").value="";document.getElementById("upload-preview-area").style.display="none";document.getElementById("upload-area").style.display="block";}
+function handleProUpload(input){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){proUploadB64=e.target.result.split(",")[1];document.getElementById("pro-upload-thumb").src=e.target.result;document.getElementById("pro-upload-name").textContent=file.name;document.getElementById("pro-upload-size").textContent=(file.size/1024).toFixed(0)+" KB";document.getElementById("pro-upload-preview").style.display="flex";document.getElementById("pro-upload-area").style.display="none";};
+    reader.readAsDataURL(file);
+}
+function removeProUpload(){proUploadB64="";document.getElementById("pro-file-input").value="";document.getElementById("pro-upload-preview").style.display="none";document.getElementById("pro-upload-area").style.display="block";}
+function showLoading(text){document.getElementById("loading-text").textContent=text||"Gerando com IA...";document.getElementById("loading-overlay").style.display="flex";}
+function hideLoading(){document.getElementById("loading-overlay").style.display="none";}
+function verImagem(){var src=document.getElementById("img-gerada").src;document.getElementById("modal-img-src").src=src;document.getElementById("modal-img").style.display="flex";}
+function verImagemPro(){document.getElementById("modal-img-src").src=document.getElementById("pro-img").src;document.getElementById("modal-img").style.display="flex";}
+async function carregarCreditos(){
+    if(!token)return;
+    try{
+        var r=await fetch(API+"/creditos",{headers:{"Authorization":"Bearer "+token}});
+        var d=await r.json();
+        var plano=d.plano.charAt(0).toUpperCase()+d.plano.slice(1);
+        document.getElementById("credits-label").textContent="Plano "+plano;
+        var sr=d.scripts.limite-d.scripts.usados;
+        var ir=d.imagens.limite-d.imagens.usados;
+        var ipr=d.imagens_pro.limite-d.imagens_pro.usados;
+        document.getElementById("credits-val").textContent=sr+" scripts | "+ir+" imgs | "+ipr+" pro";
+        if(sr<=0||ir<=0)document.getElementById("credits-val").style.color="#f87171";
+        else document.getElementById("credits-val").style.color="#fff";
+        var es=document.getElementById("stat-scripts");var ei=document.getElementById("stat-imagens");var eip=document.getElementById("stat-imagens-pro");
+        if(es)es.textContent=sr;if(ei)ei.textContent=ir;if(eip)eip.textContent=ipr;
+    }catch(e){console.log("erro creditos:",e);}
+}
+async function gerarScript(){
+    var produto=document.getElementById("produto").value.trim();
+    if(!produto){alert("Digite o produto!");return;}
+    showLoading("Gerando script com IA...");
+    try{
+        var r=await fetch(API+"/gerar-script",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({produto:produto,nicho:document.getElementById("nicho").value,tom:document.getElementById("tom").value,perfil:perfilAtual})});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.script){document.getElementById("result-empty").style.display="none";document.getElementById("result-content").style.display="block";document.getElementById("result-script").textContent=d.script;document.getElementById("video-script").value=d.script;carregarCreditos();}
+        else{alert("Erro ao gerar script.");}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function copiarScript(){navigator.clipboard.writeText(document.getElementById("result-script").textContent);alert("Script copiado!");}
+function salvarScript(){
+    var texto=document.getElementById("result-script").textContent;
+    var produto=document.getElementById("produto").value;
+    if(!texto)return;
+    var scripts=JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    scripts.unshift({produto:produto,texto:texto,data:new Date().toLocaleDateString("pt-BR")});
+    localStorage.setItem("influencia_scripts",JSON.stringify(scripts));
+    alert("Script salvo!");
+}
+function renderScripts(){
+    var scripts=JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    var lista=document.getElementById("lista-scripts");
+    if(!lista)return;
+    if(scripts.length===0){lista.innerHTML="<div style='color:#555;text-align:center;padding:40px;'>Nenhum script salvo ainda.</div>";return;}
+    var h="";
+    for(var i=0;i<scripts.length;i++){h+="<div class='card-salvo'><div style='display:flex;justify-content:space-between;margin-bottom:12px;'><div style='font-weight:700;'>"+scripts[i].produto+"</div><div style='color:#555;font-size:12px;'>"+scripts[i].data+"</div></div><div style='color:#aaa;font-size:14px;line-height:1.6;'>"+scripts[i].texto+"</div></div>";}
+    lista.innerHTML=h;
+}
+async function gerarImagem(){
+    var produto=document.getElementById("img-produto").value;
+    showLoading("Gerando influencer com IA...");
+    try{
+        var body={perfil:perfilAtual,produto:produto,imagem_produto_b64:"",cabelo:"",olhos:"",etnia:"",cenario:""};
+        if(perfilAtual==="custom"){
+            body.custom_nome=document.getElementById("custom-nome").value;
+            body.custom_idade=document.getElementById("custom-idade").value;
+            body.custom_genero=document.getElementById("custom-genero").value;
+            body.custom_etnia=document.getElementById("custom-etnia").value;
+            body.custom_cabelo=document.getElementById("custom-cabelo").value;
+            body.custom_olhos="brown eyes";
+            body.custom_estilo=document.getElementById("custom-estilo").value;
+            body.custom_cenario=document.getElementById("custom-cenario").value;
+            body.custom_expressao=document.getElementById("custom-expressao").value;
+            body.custom_extra=document.getElementById("custom-extra").value;
+        }
+        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(body)});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.url){
+            var url=d.url;
+            document.getElementById("img-gerada").src=url;
+            document.getElementById("img-download").href=url;
+            document.getElementById("img-result").style.display="block";
+            document.getElementById("result-img").src=url;
+            document.getElementById("result-img-download").href=url;
+            document.getElementById("result-img-area").style.display="block";
+            document.getElementById("video-imagem").value=window.location.origin+url;
+            var imgs=JSON.parse(localStorage.getItem("influencia_imagens")||"[]");
+            imgs.unshift({url:url,produto:produto,data:new Date().toLocaleDateString("pt-BR")});
+            localStorage.setItem("influencia_imagens",JSON.stringify(imgs));
+            carregarCreditos();
+        }else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+async function gerarImagemPro(){
+    if(!proUploadB64){alert("Envie a foto do produto primeiro!");return;}
+    showLoading("Gerando Influencer Pro...");
+    try{
+        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({perfil:document.getElementById("pro-perfil").value,produto:document.getElementById("pro-produto").value,imagem_produto_b64:proUploadB64})});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.url){document.getElementById("pro-img").src=d.url;document.getElementById("pro-download").href=d.url;document.getElementById("pro-result-empty").style.display="none";document.getElementById("pro-result").style.display="block";carregarCreditos();}
+        else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function renderImagens(){
+    var imagens=JSON.parse(localStorage.getItem("influencia_imagens")||"[]");
+    var lista=document.getElementById("lista-imagens");
+    if(!lista)return;
+    if(imagens.length===0){lista.innerHTML="<div style='color:#555;padding:40px;'>Nenhuma imagem salva ainda.</div>";return;}
+    var h="";
+    for(var i=0;i<imagens.length;i++){h+="<div class='img-card'><img src='"+imagens[i].url+"'><div class='img-card-info'><div style='font-size:13px;font-weight:600;'>"+imagens[i].produto+"</div><div style='font-size:11px;color:#555;'>"+imagens[i].data+"</div><a href='"+imagens[i].url+"' download class='result-btn' style='margin-top:8px;font-size:12px;display:flex;'>Baixar</a></div></div>";}
+    lista.innerHTML=h;
+}
+async function enviarVideo(){
+    var script=document.getElementById("video-script").value.trim();
+    var imagem=document.getElementById("video-imagem").value.trim();
+    var voz=document.getElementById("video-voz").value;
+    if(!script||!imagem){alert("Preencha o script e a URL da imagem!");return;}
+    showLoading("Enviando para gerar video...");
+    try{
+        var r=await fetch(API+"/gerar-video",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({script:script,imagem_url:imagem,voz:voz})});
+        var d=await r.json();
+        if(d.video_id){currentTalkId=d.video_id;document.getElementById("status-text").textContent="Video sendo processado! ID: "+d.video_id;document.getElementById("status-msg").style.display="block";}
+        else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+async function verificarVideo(){
+    if(!currentTalkId){alert("Nenhum video em processamento!");return;}
+    showLoading("Verificando video...");
+    try{
+        var r=await fetch(API+"/verificar-video?video_id="+currentTalkId,{headers:{"Authorization":"Bearer "+token}});
+        var d=await r.json();
+        var status=d.status||"";
+        if(status==="completed"){document.getElementById("status-text").innerHTML="Pronto! <a href='"+d.video_url+"' target='_blank' style='color:#a78bfa;'>Clique aqui para ver o video</a>";}
+        else{document.getElementById("status-text").textContent="Status: "+status+". Aguarde e tente novamente.";}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function atualizarPerfil(){
+    var nome=document.getElementById("user-name-top").textContent;
+    var elNome=document.getElementById("perfil-nome-big");
+    var elAvatar=document.getElementById("perfil-avatar-big");
+    if(elNome)elNome.textContent=nome;
+    if(elAvatar)elAvatar.textContent=nome[0].toUpperCase();
+    carregarCreditos();
+}
+
+
+
+
+
+    var texto = textoEl.textContent.replace(/^["“”]/,'').replace(/["“”]$/,'').trim();
+    showPage("scripts", document.getElementById("menu-scripts"));
+    setTimeout(function(){
+        var resultScript = document.getElementById("result-script");
+        if(resultScript){
+            resultScript.textContent = texto;
+            document.getElementById("result-empty").style.display = "none";
+            document.getElementById("result-content").style.display = "block";
+            document.getElementById("video-script").value = texto;
+        }
+        alert("Script carregado! Edite o produto e gere com IA.");
+    }, 200);
+}
+    }, 200);
+}
+
+
+    }
+    if(!texto){alert("Erro ao pegar texto!");return;}
+    showPage("scripts", document.getElementById("menu-scripts"));
+    setTimeout(function(){
+        var rs = document.getElementById("result-script");
+        if(rs){
+            rs.textContent = texto;
+            document.getElementById("result-empty").style.display="none";
+            document.getElementById("result-content").style.display="block";
+            document.getElementById("video-script").value=texto;
+            alert("Script carregado na aba Scripts!");
+        }
+    },200);
+}
+    },200);
+}
+        if(divs[i].style && divs[i].style.color === "rgb(170, 170, 170)"){
+            texto = divs[i].textContent.trim();
+            break;
+        }
+    }
+    if(!texto){texto = divs[0].textContent.trim();}
+    navigator.clipboard.writeText(texto).then(function(){alert("Copiado!");});
+}
+
+
+    }
+    if(!texto){alert("Erro ao pegar texto!");return;}
+    showPage("scripts", document.getElementById("menu-scripts"));
+    setTimeout(function(){
+        var rs = document.getElementById("result-script");
+        if(rs){
+            rs.textContent = texto;
+            document.getElementById("result-empty").style.display="none";
+            document.getElementById("result-content").style.display="block";
+            document.getElementById("video-script").value=texto;
+            alert("Script carregado na aba Scripts!");
+        }
+    },200);
+}
+    },200);
+}
+        if(divs[i].style && divs[i].style.color === "rgb(170, 170, 170)"){
+            texto = divs[i].textContent.trim();
+            break;
+        }
+    }
+    if(!texto){texto = divs[0].textContent.trim();}
+    navigator.clipboard.writeText(texto).then(function(){alert("Copiado!");});
+}
+
+
+
+
+function copiarTexto(texto){
+    navigator.clipboard.writeText(texto).then(function(){
+        alert("Copiado!");
+    });
+}
+
+
+function copiarTexto(texto){
+    navigator.clipboard.writeText(texto).then(function(){
+        alert("Copiado!");
+    });
+}
+
+
+function copiarTexto(texto){
+    navigator.clipboard.writeText(texto).then(function(){
+        alert("Copiado!");
+    });
+}
+
+
+function copiarTexto(texto){
+    navigator.clipboard.writeText(texto).then(function(){
+        alert("Copiado!");
+    });
+}
+
+
+function copiarTexto(texto){
+    navigator.clipboard.writeText(texto).then(function(){
+        alert("Copiado!");
+    });
+}
+
+</script>

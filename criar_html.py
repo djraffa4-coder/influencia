@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>InfluencIA</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:flex;min-height:100vh;}
+#login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:100vh;background:#0f0f1a;position:relative;overflow:hidden;}
+#login-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:0;}
+.login-box{position:relative;z-index:1;background:rgba(15,15,26,0.75);backdrop-filter:blur(12px);border-radius:20px;padding:40px;width:100%;max-width:400px;border:1px solid rgba(167,139,250,0.3);}
+.login-logo-img{width:180px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
+.login-sub{color:#888;font-size:14px;margin-bottom:32px;text-align:center;}
+.login-box input{width:100%;padding:12px 16px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#fff;font-size:14px;margin-bottom:12px;}
+.login-box input:focus{outline:none;border-color:#a78bfa;}
+.login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;}
+.login-link{color:#a78bfa;text-align:center;margin-top:16px;font-size:14px;cursor:pointer;}
+.login-err{color:#f87171;font-size:13px;margin-bottom:8px;display:none;}
+#app-screen{display:none;width:100%;min-height:100vh;}
+.sidebar{width:240px;background:#13131f;border-right:1px solid #1e1e35;padding:24px 16px;display:flex;flex-direction:column;position:fixed;height:100vh;overflow-y:auto;}
+.sidebar-logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:32px;padding-left:8px;}
+.sidebar-section{font-size:11px;color:#555;font-weight:600;letter-spacing:1px;margin-bottom:8px;margin-top:20px;padding-left:8px;}
+.sidebar-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:10px;cursor:pointer;color:#aaa;font-size:14px;transition:all 0.2s;margin-bottom:2px;}
+.sidebar-item:hover{background:#1e1e35;color:#fff;}
+.sidebar-item.active{background:#2a1f4e;color:#a78bfa;}
+.sidebar-item .icon{font-size:16px;width:20px;text-align:center;}
+.badge{background:linear-gradient(135deg,#a78bfa,#ec4899);color:#fff;font-size:10px;padding:2px 8px;border-radius:20px;font-weight:600;}
+.upgrade-box{background:linear-gradient(135deg,#1e1040,#2a1f4e);border:1px solid #a78bfa33;border-radius:14px;padding:16px;margin-top:auto;}
+.upgrade-btn{width:100%;padding:10px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:8px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;}
+.main{margin-left:240px;flex:1;display:flex;flex-direction:column;min-height:100vh;}
+.topbar{display:flex;align-items:center;justify-content:flex-end;padding:16px 32px;border-bottom:1px solid #1e1e35;background:#13131f;gap:16px;}
+.credits-box{display:flex;align-items:center;gap:8px;background:#1e1e35;border-radius:10px;padding:8px 16px;cursor:pointer;}
+.credits-label{font-size:12px;color:#a78bfa;font-weight:600;}
+.credits-val{font-size:13px;font-weight:700;}
+.user-box{display:flex;align-items:center;gap:10px;cursor:pointer;}
+.user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#ec4899);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;}
+.content{padding:32px;flex:1;}
+.page{display:none;}
+.page.active{display:block;}
+.page-header{display:flex;align-items:center;gap:16px;margin-bottom:32px;}
+.page-icon{width:56px;height:56px;background:#2a1f4e;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;}
+.page-title{font-size:24px;font-weight:700;}
+.page-sub{color:#888;font-size:14px;margin-top:4px;}
+.content-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;}
+.form-panel,.result-panel{background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;}
+.steps{display:flex;gap:0;margin-bottom:28px;}
+.step{display:flex;align-items:center;gap:8px;font-size:13px;color:#555;}
+.step.active{color:#a78bfa;}
+.step-num{width:24px;height:24px;border-radius:50%;background:#1e1e35;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;}
+.step.active .step-num{background:#a78bfa;color:#fff;}
+.step-line{width:40px;height:1px;background:#1e1e35;margin:0 4px;}
+.field-label{font-size:13px;color:#888;margin-bottom:8px;display:block;}
+.field-label span{color:#555;font-size:12px;}
+.form-input{width:100%;padding:12px 16px;background:#0f0f1a;border:1px solid #1e1e35;border-radius:10px;color:#fff;font-size:14px;margin-bottom:4px;}
+.form-input:focus{outline:none;border-color:#a78bfa;}
+.char-count{font-size:12px;color:#555;text-align:right;margin-bottom:16px;}
+.examples{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center;}
+.example-tag{background:#1e1e35;border:1px solid #2a2a4a;border-radius:20px;padding:6px 12px;font-size:12px;color:#aaa;cursor:pointer;}
+.example-tag:hover{border-color:#a78bfa;color:#a78bfa;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;}
+.form-select{width:100%;padding:11px 16px;background:#0f0f1a;border:1px solid #1e1e35;border-radius:10px;color:#fff;font-size:14px;}
+.upload-area{border:2px dashed #2a2a4a;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:all 0.2s;margin-bottom:12px;}
+.upload-area:hover{border-color:#a78bfa;}
+.upload-preview{display:flex;align-items:center;gap:12px;background:#0f0f1a;border-radius:10px;padding:12px;margin-bottom:12px;}
+.upload-preview img{width:48px;height:48px;border-radius:8px;object-fit:cover;}
+.upload-remove{margin-left:auto;background:none;border:none;color:#888;cursor:pointer;font-size:18px;}
+.gerar-btn{width:100%;padding:14px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:12px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:20px;}
+.result-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:#555;text-align:center;}
+.result-score{display:inline-flex;align-items:center;gap:6px;background:#1e3a1e;color:#4ade80;border-radius:8px;padding:4px 12px;font-size:13px;font-weight:600;margin-bottom:12px;}
+.result-section-title{font-size:11px;color:#a78bfa;font-weight:700;letter-spacing:1px;margin-bottom:8px;margin-top:16px;}
+.result-text{font-size:14px;color:#ddd;line-height:1.7;background:#0f0f1a;border-radius:10px;padding:16px;}
+.result-actions{display:flex;gap:10px;margin-top:16px;}
+.result-btn{flex:1;padding:10px;background:#1e1e35;border:1px solid #2a2a4a;border-radius:10px;color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;text-decoration:none;}
+.result-btn:hover{border-color:#a78bfa;color:#a78bfa;}
+.result-img{width:100%;border-radius:12px;margin-top:16px;}
+.video-btn{width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-top:12px;}
+.perfis-section{margin-bottom:8px;font-size:12px;font-weight:700;color:#a78bfa;letter-spacing:1px;margin-top:20px;}
+.perfis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;margin-bottom:8px;}
+.perfil-card{background:#13131f;border:2px solid #1e1e35;border-radius:16px;padding:14px;text-align:center;cursor:pointer;transition:all 0.2s;}
+.perfil-card:hover{border-color:#a78bfa;transform:translateY(-2px);}
+.perfil-card.ativo{border-color:#a78bfa;background:#2a1f4e;}
+.perfil-emoji{font-size:32px;margin-bottom:8px;}
+.perfil-nome{font-size:12px;font-weight:700;margin-bottom:2px;}
+.perfil-info{font-size:10px;color:#888;}
+.perfil-nicho{font-size:10px;color:#a78bfa;margin-top:2px;}
+.loading-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.7);z-index:1000;align-items:center;justify-content:center;flex-direction:column;gap:16px;}
+.loading-spinner{width:48px;height:48px;border:4px solid #2a2a4a;border-top-color:#a78bfa;border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.loading-text{color:#fff;font-size:15px;}
+#modal-img{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;}
+.modal-inner{position:relative;max-width:90%;max-height:90%;}
+.modal-close{position:absolute;top:-15px;right:-15px;background:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:bold;color:#000;}
+.features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px;}
+.feature{background:#13131f;border:1px solid #1e1e35;border-radius:12px;padding:16px;}
+.feature-icon{font-size:24px;margin-bottom:8px;}
+.feature-title{font-size:13px;font-weight:700;margin-bottom:4px;}
+.feature-sub{font-size:12px;color:#888;}
+.lista-grid{display:grid;gap:16px;max-width:800px;}
+.card-salvo{background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:20px;}
+.imgs-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.img-card{background:#13131f;border:1px solid #1e1e35;border-radius:12px;overflow:hidden;}
+.img-card img{width:100%;aspect-ratio:2/3;object-fit:cover;}
+.img-card-info{padding:12px;}
+.pro-banner{background:linear-gradient(135deg,#2a1f4e,#1e1035);border:1px solid #a78bfa;border-radius:16px;padding:20px;margin-bottom:24px;max-width:900px;}
+@media(max-width:900px){.content-grid{grid-template-columns:1fr;}.sidebar{display:none;}.main{margin-left:0;}}
+
+/* CSS ADICIONADO PARA O ACERVO VIP ORIGINAL */
+.acervo-vip-link { display: block; padding: 15px; margin-bottom: 10px; background: #13131f; border: 1px solid #1e1e35; border-radius: 8px; color: #fff; text-decoration: none; transition: 0.2s; font-size: 14px; }
+.acervo-vip-link:hover { border-color: #a78bfa; background: #1a1a2e; }
+.acervo-vip-icon { color: #a78bfa; margin-right: 10px; font-size: 16px; }
+
+/* CSS ADICIONADO PARA A NOVA DASHBOARD */
+.dash-header { display: flex; gap: 40px; align-items: center; margin-bottom: 50px; }
+.dash-video-area { flex: 1; }
+.dash-video-box { width: 100%; height: 380px; background: #1a1a2e; border-radius: 24px; border: 1px solid rgba(167, 139, 250, 0.2); overflow: hidden; display: flex; align-items: center; justify-content: center; box-shadow: 0 15px 40px rgba(0,0,0,0.3); }
+.dash-video-box video { width: 100%; height: 100%; object-fit: cover; }
+.dash-embaixadora { width: 320px; background: rgba(30, 30, 45, 0.4); border-radius: 24px; padding: 24px; border: 1px solid rgba(236, 72, 153, 0.2); text-align: center; }
+.embaixadora-img { width: 120px; height: 120px; border-radius: 50%; object-fit: cover; border: 3px solid #ec4899; margin-bottom: 16px; }
+.dash-pricing { display: flex; gap: 24px; margin-top: 40px; }
+.price-card { flex: 1; background: rgba(30, 30, 45, 0.6); padding: 32px; border-radius: 24px; border: 1px solid rgba(255,255,255,0.05); transition: 0.3s; text-align: center; }
+.price-card:hover { border-color: #a78bfa; transform: translateY(-5px); background: #1a1a2e; }
+.price-card.featured { border-color: #ec4899; background: rgba(236, 72, 153, 0.05); position: relative; }
+.featured-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ec4899; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; }
+.price-card .price { font-size: 32px; font-weight: 700; color: #fff; margin: 16px 0; }
+.btn-assinar { width: 100%; padding: 12px; background: linear-gradient(135deg, #a78bfa, #ec4899); border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<div id="login-screen">
+    <img id="login-bg" src="/static/capa.png">
+    <div class="login-box">
+        <img class="login-logo-img" src="/static/logo.png" onerror="this.style.display='none'">
+        <div class="login-sub">Crie scripts, influencers e videos com IA</div>
+        <div class="login-err" id="login-err"></div>
+        <input type="text" id="login-user" placeholder="Usuario">
+        <input type="password" id="login-pass" placeholder="Senha">
+        <button class="login-btn" onclick="doLogin()">Entrar</button>
+        <div class="login-link" onclick="showRegister()">Criar conta gratis</div>
+        <div id="register-section" style="display:none;">
+            <hr style="border-color:#2a2a4a;margin:20px 0;">
+            <input type="text" id="reg-user" placeholder="Novo usuario">
+            <input type="password" id="reg-pass" placeholder="Nova senha">
+            <button class="login-btn" onclick="doRegister()">Criar conta</button>
+        </div>
+    </div>
+</div>
+
+<div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text" id="loading-text">Gerando com IA...</div>
+</div>
+
+<div id="modal-img">
+    <div class="modal-inner">
+        <img id="modal-img-src" src="">
+        <button class="modal-close" onclick="document.getElementById('modal-img').style.display='none'">X</button>
+    </div>
+</div>
+
+<div id="imagemModal" style="display:none; position:fixed; z-index:9999; left:0; top:0; width:100%; height:100%; background-color:rgba(0,0,0,0.9); justify-content:center; align-items:center; flex-direction:column;">
+    <span onclick="fecharImagemModal()" style="position:absolute; top:20px; right:40px; color:#fff; font-size:40px; font-weight:bold; cursor:pointer;">&times;</span>
+    <img id="imgModalSrc" style="max-width:90%; max-height:90%; border-radius:8px; box-shadow: 0 0 20px rgba(0,0,0,0.5);">
+</div>
+
+<div id="app-screen">
+    
+    <div class="sidebar">
+        <div class="sidebar-logo">&#10022; InfluencIA</div>
+        
+        <div class="sidebar-section">PRINCIPAL</div>
+        <div class="sidebar-item active" id="menu-dashboard" onclick="showPage('dashboard',this)"><span class="icon">&#127968;</span> Dashboard</div>
+
+        <div class="sidebar-section">GERAR CONTEÚDO</div>
+        <div class="sidebar-item" id="menu-scripts" onclick="showPage('scripts',this)"><span class="icon">&#9998;</span> Scripts</div>
+        <div class="sidebar-item" id="menu-influencer" onclick="showPage('influencer',this)"><span class="icon">&#128100;</span> Influencer</div>
+        <div class="sidebar-item" id="menu-influencer-pro" onclick="showPage('influencer-pro',this)"><span class="icon">&#11088;</span> Influencer Pro <span class="badge">Pro</span></div>
+        
+        <div class="sidebar-section">ACERVO & RECURSOS</div>
+        <div class="sidebar-item" onclick="showPage('banco-influenciadores', this)" id="menu-banco-influenciadores">
+            <span class="icon">📸</span> Banco Influencers
+        </div>
+        <div class="sidebar-item" onclick="showPage('acervo-vip', this)">
+            <span class="icon">💎</span> Acervo VIP
+        </div>
+
+        <div class="sidebar-section">MEUS CONTEÚDOS</div>
+        <div class="sidebar-item" onclick="showPage('scripts-gerados',this);renderScripts()"><span class="icon">&#128196;</span> Scripts gerados</div>
+        <div class="sidebar-item" onclick="showPage('imagens-geradas',this);renderImagens()"><span class="icon">&#128247;</span> Imagens geradas</div>
+
+        <div class="sidebar-section">CONFIGURAÇÕES</div>
+        <div class="sidebar-item" onclick="showPage('perfil',this);atualizarPerfil()"><span class="icon">&#128100;</span> Perfil</div>
+        <div class="sidebar-item" onclick="doLogout()"><span class="icon">&#128682;</span> Sair</div>
+        
+        <div class="upgrade-box" style="margin-top:32px;">
+            <div style="font-size:14px;font-weight:700;margin-bottom:4px;">Upgrade para Pro</div>
+            <div style="font-size:12px;color:#888;margin-bottom:12px;">Scripts, imagens e muito mais!</div>
+            <button class="upgrade-btn">&#128640; Ver planos</button>
+        </div>
+    </div>
+
+    <div class="main">
+        <div class="topbar">
+            <div class="credits-box">
+                <span>&#9889;</span>
+                <div>
+                    <div class="credits-label" id="credits-label">Plano Free</div>
+                    <div class="credits-val" id="credits-val">carregando...</div>
+                </div>
+                </div>
+            <div class="user-box">
+                <div class="user-avatar" id="user-avatar">T</div>
+                <div>
+                    <div style="font-size:14px;font-weight:600;" id="user-name-top">teste</div>
+                    <div style="font-size:12px;color:#888;">usuario@email.com</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content">
+
+            <div class="page active" id="page-dashboard">
+                <div class="dash-header">
+                    <div class="dash-video-area">
+                        <h2 style="font-size:32px; font-weight:700; margin-bottom:16px;">Assista e <span style="color:#a78bfa;">Escale</span></h2>
+                        <div class="dash-video-box">
+                            <video controls poster="/static/capa.png">
+                                <source src="/static/apresentacao.mp4" type="video/mp4">
+                            </video>
+                        </div>
+                    </div>
+                    <div class="dash-embaixadora">
+                        <img src="/static/capa.png" class="embaixadora-img" alt="Rafaela Morita">
+                        <h3 style="font-size:18px; margin-bottom:4px;">Rafaela Morita</h3>
+                        <div style="color:#ec4899; font-size:12px; font-weight:700; margin-bottom:16px;">EMBAIXADORA OFICIAL</div>
+                        <p style="font-size:13px; color:#aaa; line-height:1.4;">"Eu guio você pela jornada de criação, humanizando a IA para gerar conexões reais e conversões astronômicas."</p>
+                    </div>
+                </div>
+
+                <h2 style="font-size:24px; font-weight:700; text-align:center;">Escolha seu <span style="color:#ec4899;">Lucro Inteligente</span></h2>
+                <div class="dash-pricing">
+                    <div class="price-card">
+                        <h3 style="color:#a78bfa;">Kit Teste</h3>
+                        <div class="price">R$ 47</div>
+                        <p style="font-size:14px; margin-bottom: 20px;">50 Scripts + 20 Imagens</p>
+                        <button class="btn-assinar">ASSINAR AGORA</button>
+                    </div>
+                    <div class="price-card featured">
+                        <div class="featured-badge">MAIS VENDIDO</div>
+                        <h3 style="color:#ec4899;">Kit Criador PRO</h3>
+                        <div class="price">R$ 97</div>
+                        <p style="font-size:14px; margin-bottom: 20px;">150 Scripts + 100 Imagens + VIP</p>
+                        <button class="btn-assinar">RECOMENDADO</button>
+                    </div>
+                    <div class="price-card">
+                        <h3 style="color:#fff;">Kit Agência</h3>
+                        <div class="price">R$ 197</div>
+                        <p style="font-size:14px; margin-bottom: 20px;">Ilimitado + Suporte 24h</p>
+                        <button class="btn-assinar" style="background:#333;">EM BREVE</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-scripts">
+                <div class="page-header">
+                    <div class="page-icon">&#9998;</div>
+                    <div>
+                        <div class="page-title">Gerar script de venda</div>
+                        <div class="page-sub">Crie roteiros virais para TikTok em segundos com IA.</div>
+                    </div>
+                </div>
+                <div class="content-grid">
+                    <div class="form-panel">
+                        <div class="steps">
+                            <div class="step active"><div class="step-num">1</div> Produto</div>
+                            <div class="step-line"></div>
+                            <div class="step"><div class="step-num">2</div> Detalhes</div>
+                            <div class="step-line"></div>
+                            <div class="step"><div class="step-num">3</div> Gerar</div>
+                        </div>
+                        <label class="field-label">Produto ou servico</label>
+                        <input type="text" class="form-input" id="produto" placeholder="Ex: Camisa do Flamengo" maxlength="100" oninput="document.getElementById('char-count').textContent=this.value.length+'/100'">
+                        <div class="char-count"><span id="char-count">0</span>/100</div>
+                        <div class="examples">
+                            <span class="field-label" style="margin-bottom:0;">Exemplos:</span>
+                            <span class="example-tag" onclick="setExemplo('Relogio masculino')">Relogio masculino</span>
+                            <span class="example-tag" onclick="setExemplo('Curso de ingles')">Curso de ingles</span>
+                            <span class="example-tag" onclick="setExemplo('Tenis esportivo')">Tenis esportivo</span>
+                            <span class="example-tag" onclick="setExemplo('Biquini verao')">Biquini verao</span>
+                        </div>
+                        <div class="form-row">
+                            <div>
+                                <label class="field-label">Nicho</label>
+                                <select class="form-select" id="nicho">
+                                    <option value="moda">Moda</option>
+                                    <option value="beleza">Beleza</option>
+                                    <option value="fitness">Fitness</option>
+                                    <option value="educacao">Educacao</option>
+                                    <option value="financas">Financas</option>
+                                    <option value="alimentacao">Alimentacao</option>
+                                    <option value="tecnologia">Tecnologia</option>
+                                    <option value="casa">Casa e Decoracao</option>
+                                    <option value="pet">Pet</option>
+                                    <option value="esportes">Esportes</option>
+                                    <option value="saude">Saude</option>
+                                    <option value="viagem">Viagem</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="field-label">Tom</label>
+                                <select class="form-select" id="tom">
+                                    <option value="animado">Animado</option>
+                                    <option value="motivacional">Motivacional</option>
+                                    <option value="serio">Serio</option>
+                                    <option value="engracado">Engracado</option>
+                                    <option value="emotivo">Emotivo</option>
+                                    <option value="urgente">Urgente</option>
+                                    <option value="exclusivo">Exclusivo</option>
+                                    <option value="educativo">Educativo</option>
+                                </select>
+                            </div>
+                        </div>
+                        <label class="field-label">Publico-alvo <span>(opcional)</span></label>
+                        <input type="text" class="form-input" id="publico" placeholder="Ex: Homens e mulheres flamenguistas" style="margin-bottom:16px;">
+                        <label class="field-label">Foto do produto <span>(opcional)</span></label>
+                        <div id="upload-preview-area" style="display:none;" class="upload-preview">
+                            <img id="upload-thumb" src="">
+                            <div><div style="font-size:13px;font-weight:600;" id="upload-name"></div><div style="font-size:12px;color:#888;" id="upload-size"></div></div>
+                            <button class="upload-remove" onclick="removeUpload()">X</button>
+                        </div>
+                        <div class="upload-area" id="upload-area" onclick="document.getElementById('file-input').click()">
+                            <div style="font-size:28px;margin-bottom:8px;">&#9729;</div>
+                            <div style="font-size:13px;color:#888;">Enviar foto do produto</div>
+                            <div style="font-size:12px;color:#555;margin-top:4px;">PNG, JPG ate 5MB</div>
+                            <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleUpload(this)">
+                        </div>
+                        <button class="gerar-btn" onclick="gerarScript()">&#10024; Gerar script com IA</button>
+                    </div>
+                    <div class="result-panel">
+                        <div class="result-empty" id="result-empty">
+                            <div style="font-size:48px;margin-bottom:16px;">&#9998;</div>
+                            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Seu script aparecera aqui</div>
+                            <div style="font-size:13px;">Preencha os campos e clique em gerar</div>
+                        </div>
+                        <div id="result-content" style="display:none;">
+                            <div class="result-score">&#11088; Nota 9.3/10</div>
+                            <div style="font-size:13px;color:#888;margin-bottom:20px;">Script gerado com sucesso!</div>
+                            <div class="result-section-title">SCRIPT DE VENDA</div>
+                            <div class="result-text" id="result-script"></div>
+                            <div class="result-actions">
+                                <button class="result-btn" onclick="copiarScript()">&#128203; Copiar</button>
+                                <button class="result-btn" onclick="salvarScript()">&#128190; Salvar</button>
+                            </div>
+                            <div id="result-img-area" style="display:none;margin-top:20px;">
+                                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                                    <div style="font-size:14px;font-weight:700;color:#a78bfa;">IMAGEM DO INFLUENCER</div>
+                                    <div style="font-size:12px;color:#4ade80;">&#10003; Gerada com sucesso</div>
+                                </div>
+                                <img class="result-img" id="result-img" src="">
+                                <div class="result-actions" style="margin-top:12px;">
+                                    <a id="result-img-download" href="#" class="result-btn">&#11015; Baixar</a>
+                                    <button class="result-btn" onclick="verImagem()">&#128269; Ver completa</button>
+                                </div>
+                                <button class="video-btn" onclick="showPage('video',document.getElementById('menu-video'))">&#127909; Gerar video com este conteudo</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="features">
+                    <div class="feature"><div class="feature-icon">&#9889;</div><div class="feature-title">Scripts virais</div><div class="feature-sub">Roteiros otimizados para TikTok</div></div>
+                    <div class="feature"><div class="feature-icon">&#128100;</div><div class="feature-title">Influencers realistas</div><div class="feature-sub">Imagens ultra realistas com IA</div></div>
+                    <div class="feature"><div class="feature-icon">&#127909;</div><div class="feature-title">Videos prontos</div><div class="feature-sub">Videos com avatares que falam</div></div>
+                    <div class="feature"><div class="feature-icon">&#127919;</div><div class="feature-title">Tudo em um lugar</div><div class="feature-sub">Do roteiro ao video em minutos</div></div>
+                </div>
+            </div>
+
+            <div class="page" id="page-influencer">
+                <div class="page-header">
+                    <div class="page-icon">&#128100;</div>
+                    <div>
+                        <div class="page-title">Criar influencer virtual</div>
+                        <div class="page-sub">Escolha o perfil e gere seu influencer com IA.</div>
+                    </div>
+                </div>
+                <div class="perfis-section">INFLUENCERS FEMININAS</div>
+                <div class="perfis-grid">
+                    <div class="perfil-card ativo" onclick="selecionarPerfil('rafaela',this)"><div class="perfil-emoji">&#128248;</div><div class="perfil-nome">Yumi Tenório</div><div class="perfil-info">26 anos - Carioca</div><div class="perfil-nicho">Moda e Fashion</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('bianca',this)"><div class="perfil-emoji">&#128132;</div><div class="perfil-nome">Bianca Alves</div><div class="perfil-info">26 anos - Paulistana</div><div class="perfil-nicho">Beleza e Lifestyle</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('camila',this)"><div class="perfil-emoji">&#128170;</div><div class="perfil-nome">Camila Rocha</div><div class="perfil-info">28 anos - Mineira</div><div class="perfil-nicho">Fitness e Saude</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('isabella',this)"><div class="perfil-emoji">&#128081;</div><div class="perfil-nome">Isabella Cruz</div><div class="perfil-info">30 anos - Baiana</div><div class="perfil-nicho">Luxo e Premium</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('larissa',this)"><div class="perfil-emoji">&#128516;</div><div class="perfil-nome">Larissa Santos</div><div class="perfil-info">25 anos - Gaucha</div><div class="perfil-nicho">Tech e Educacao</div></div>
+                </div>
+                <div class="perfis-section">INFLUENCERS MASCULINOS</div>
+                <div class="perfis-grid">
+                    <div class="perfil-card" onclick="selecionarPerfil('rafael',this)"><div class="perfil-emoji">&#128170;</div><div class="perfil-nome">Rafael Costa</div><div class="perfil-info">28 anos - Carioca</div><div class="perfil-nicho">Fitness e Esportes</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('lucas',this)"><div class="perfil-emoji">&#128084;</div><div class="perfil-nome">Lucas Mendes</div><div class="perfil-info">30 anos - Paulistano</div><div class="perfil-nicho">Luxo e Premium</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('pedro',this)"><div class="perfil-emoji">&#127918;</div><div class="perfil-nome">Pedro Alves</div><div class="perfil-info">24 anos - Gaucho</div><div class="perfil-nicho">Tech e Games</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('mateus',this)"><div class="perfil-emoji">&#127940;</div><div class="perfil-nome">Mateus Lima</div><div class="perfil-info">26 anos - Baiano</div><div class="perfil-nicho">Lifestyle e Praia</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('custom',this)"><div class="perfil-emoji">&#10024;</div><div class="perfil-nome">Criar meu</div><div class="perfil-info">Personalizavel</div><div class="perfil-nicho">Livre criacao</div></div>
+                </div>
+                <div id="custom-perfil" style="display:none;background:#13131f;border:1px solid #a78bfa;border-radius:16px;padding:20px;margin-bottom:24px;max-width:700px;">
+                    <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:16px;">&#10024; Personalizar influencer</div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+                        <div><label class="field-label">Genero</label><select class="form-select" id="custom-genero" onchange="atualizarCamposCustom(this.value)"><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></div>
+                        <div><label class="field-label">Nome</label><input type="text" class="form-input" id="custom-nome" placeholder="Ex: Julia Silva"></div>
+                        <div><label class="field-label">Idade</label><input type="number" class="form-input" id="custom-idade" placeholder="Ex: 25" min="18" max="50"></div>
+                        <div><label class="field-label">Etnia</label><select class="form-select" id="custom-etnia"><option value="white brazilian">Branca/o</option><option value="black brazilian">Negra/o</option><option value="asian brazilian">Asiatica/o</option><option value="mixed race brazilian">Mestica/o</option></select></div>
+                        <div><label class="field-label">Cabelo</label><select class="form-select" id="custom-cabelo"><option value="long blonde hair">Longo loiro</option><option value="long dark brown hair">Longo moreno</option><option value="long black hair">Longo preto</option><option value="curly black hair">Cacheado preto</option></select></div>
+                        <div><label class="field-label">Estilo</label><select class="form-select" id="custom-estilo"><option value="fashion influencer, trendy outfit">Fashion</option><option value="fitness influencer, sports outfit">Fitness</option><option value="luxury lifestyle, elegant outfit">Luxo</option><option value="casual street style">Casual</option></select></div>
+                        <div><label class="field-label">Cenario</label><select class="form-select" id="custom-cenario"><option value="modern apartment background">Apartamento moderno</option><option value="professional studio background">Estudio</option><option value="outdoor sunny background">Ao ar livre</option><option value="gym background">Academia</option><option value="beach background">Praia</option></select></div>
+                        <div><label class="field-label">Expressao</label><select class="form-select" id="custom-expressao"><option value="energetic smile">Sorriso energetico</option><option value="confident look">Olhar confiante</option><option value="friendly smile">Sorriso amigavel</option><option value="serious professional look">Expressao seria</option></select></div>
+                    </div>
+                    <div style="margin-top:12px;"><label class="field-label">Detalhes extras <span>(opcional)</span></label><input type="text" class="form-input" id="custom-extra" placeholder="Ex: tatuagem no braco, oculos de sol..."></div>
+                </div>
+                <div style="max-width:500px;">
+                    <label class="field-label">Produto que vai anunciar <span>(opcional)</span></label>
+                    <input type="text" class="form-input" id="img-produto" placeholder="Ex: Camisa Flamengo, Perfume importado..." style="margin-bottom:20px;">
+                    <button class="gerar-btn" onclick="gerarImagem()">&#10024; Gerar influencer com IA</button>
+                    <div id="img-result" style="display:none;margin-top:24px;">
+                        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                            <div style="font-size:14px;font-weight:700;color:#a78bfa;">IMAGEM GERADA</div>
+                            <div style="font-size:12px;color:#4ade80;">&#10003; Gerada com sucesso</div>
+                        </div>
+                        <img class="result-img" id="img-gerada" src="">
+                        <div class="result-actions" style="margin-top:12px;">
+                            <a id="img-download" href="#" class="result-btn">&#11015; Baixar</a>
+                            <button class="result-btn" onclick="verImagem()">&#128269; Ver completa</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-influencer-pro">
+                <div class="page-header">
+                    <div class="page-icon">&#11088;</div>
+                    <div>
+                        <div class="page-title">Influencer Pro</div>
+                        <div class="page-sub">Gere influencers com seu produto real usando IA avancada.</div>
+                    </div>
+                </div>
+                <div class="pro-banner">
+                    <div style="font-weight:700;font-size:15px;margin-bottom:4px;">&#11088; Recurso exclusivo Pro</div>
+                    <div style="font-size:13px;color:#aaa;">Envie a foto do produto e a IA gera o influencer segurando ele com maxima fidelidade ao produto original.</div>
+                </div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;">
+                    <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;">
+                        <label class="field-label">Influencer</label>
+                        <select class="form-select" id="pro-perfil" style="margin-bottom:16px;">
+                            <optgroup label="Femininas">
+                                <option value="rafaela">Yumi Tenório - Moda</option>
+                                <option value="bianca">Bianca Alves - Beleza</option>
+                                <option value="camila">Camila Rocha - Fitness</option>
+                                <option value="isabella">Isabella Cruz - Luxo</option>
+                                <option value="larissa">Larissa Santos - Tech</option>
+                            </optgroup>
+                            <optgroup label="Masculinos">
+                                <option value="rafael">Rafael Costa - Fitness</option>
+                                <option value="lucas">Lucas Mendes - Luxo</option>
+                                <option value="pedro">Pedro Alves - Tech</option>
+                                <option value="mateus">Mateus Lima - Lifestyle</option>
+                            </optgroup>
+                        </select>
+                        <label class="field-label">Produto</label>
+                        <input type="text" class="form-input" id="pro-produto" placeholder="Ex: Camisa Flamengo..." style="margin-bottom:16px;">
+                        <label class="field-label">Foto do produto <span style="color:#a78bfa;">(obrigatorio)</span></label>
+                        <div id="pro-upload-preview" style="display:none;" class="upload-preview">
+                            <img id="pro-upload-thumb" src="">
+                            <div><div style="font-size:13px;font-weight:600;" id="pro-upload-name"></div><div style="font-size:12px;color:#888;" id="pro-upload-size"></div></div>
+                            <button class="upload-remove" onclick="removeProUpload()">X</button>
+                        </div>
+                        <div class="upload-area" id="pro-upload-area" onclick="document.getElementById('pro-file-input').click()">
+                            <div style="font-size:28px;margin-bottom:8px;">&#128247;</div>
+                            <div style="font-size:13px;color:#888;">Enviar foto do produto</div>
+                            <div style="font-size:12px;color:#555;margin-top:4px;">PNG, JPG ate 5MB</div>
+                            <input type="file" id="pro-file-input" accept="image/*" style="display:none;" onchange="handleProUpload(this)">
+                        </div>
+                        <button class="gerar-btn" onclick="gerarImagemPro()">&#11088; Gerar Influencer Pro</button>
+                    </div>
+                    <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;">
+                        <div id="pro-result-empty" style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:#555;text-align:center;">
+                            <div style="font-size:48px;margin-bottom:16px;">&#11088;</div>
+                            <div style="font-size:15px;font-weight:600;margin-bottom:8px;">Resultado aparecera aqui</div>
+                            <div style="font-size:13px;">Envie a foto e clique em gerar</div>
+                        </div>
+                        <div id="pro-result" style="display:none;">
+                            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                                <div style="font-size:14px;font-weight:700;color:#a78bfa;">IMAGEM PRO GERADA</div>
+                                <div style="font-size:12px;color:#4ade80;">&#10003; Gerada com sucesso</div>
+                            </div>
+                            <img id="pro-img" class="result-img" src="">
+                            <div class="result-actions" style="margin-top:12px;">
+                                <a id="pro-download" href="#" class="result-btn">&#11015; Baixar</a>
+                                <button class="result-btn" onclick="verImagemPro()">&#128269; Ver completa</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-video">
+                <div class="page-header">
+                    <div class="page-icon">&#127909;</div>
+                    <div>
+                        <div class="page-title">Gerar video com IA</div>
+                        <div class="page-sub">O influencer vai falar o script no video.</div>
+                    </div>
+                </div>
+                <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;max-width:600px;">
+                    <label class="field-label">Script</label>
+                    <textarea class="form-input" id="video-script" rows="5" placeholder="Cole o script aqui..." style="margin-bottom:16px;resize:vertical;"></textarea>
+                    <label class="field-label">URL da imagem</label>
+                    <input type="text" class="form-input" id="video-imagem" placeholder="URL da imagem gerada..." style="margin-bottom:16px;">
+                    <label class="field-label">Voz</label>
+                    <select class="form-select" id="video-voz" style="margin-bottom:20px;">
+                        <option value="pt-BR-FranciscaNeural">Francesca (feminino, BR)</option>
+                        <option value="pt-BR-BrendaNeural">Brenda (feminino, BR)</option>
+                        <option value="pt-BR-AntonioNeural">Antonio (masculino, BR)</option>
+                    </select>
+                    <button class="gerar-btn" onclick="enviarVideo()">&#127909; Enviar para gerar video</button>
+                    <div id="status-msg" style="display:none;margin-top:16px;background:#1e1e35;border-radius:10px;padding:16px;">
+                        <div id="status-text" style="margin-bottom:12px;font-size:14px;"></div>
+                        <button class="gerar-btn" style="margin-top:0;" onclick="verificarVideo()">&#128269; Verificar se o video ficou pronto</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-banco-influenciadores">
+                <div style="margin-bottom:30px;">
+                    <h2 style="font-size:28px; font-weight:700; color:#fff;">📸 Banco de Influenciadores</h2>
+                    <p style="color:#aaa; font-size:16px;">Clique na imagem para expandir. Escolha o modelo ideal e copie o prompt reverso.</p>
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px;">
+                    
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF1.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF1</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF1.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF1-PRO.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF1-PRO</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF1-PRO.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF-2.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF-2</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF-2.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF3.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF3</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF3.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF4.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF4</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF4.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF5.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF5</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF5.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF6.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF6</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF6.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF10.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF10</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF10.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF11.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF11</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF11.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF12.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF12</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF12.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF13.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF13</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF13.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF14.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF14</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF14.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF15.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF15</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF15.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF16.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF16</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF16.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF16-2.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF16-2</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF16-2.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF17.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF17</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF17.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF17-2.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF17-2</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF17-2.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF18.jpg' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF18</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF18.jpg")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF19.jpg' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF19</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF19.jpg")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF20.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF20</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF20.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF21.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF21</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF21.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF22.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF22</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF22.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF23.jpg' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF23</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF23.jpg")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF24.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF24</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF24.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF25.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF25</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF25.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF26.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF26</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF26.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF27.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF27</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF27.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                    <div style='background:#13131f; border:1px solid #1e1e35; border-radius:12px; overflow:hidden;'>
+                        <img src='static/exemplos/INF27-2.png' onclick='abrirImagemModal(this.src)' style='width:100%; height:250px; object-fit:cover; object-position: top; cursor:zoom-in; transition: 0.2s;' onmouseover='this.style.opacity=0.8' onmouseout='this.style.opacity=1'>
+                        <div style='padding:15px;'>
+                            <div style='font-weight:bold; margin-bottom:10px; color:#fff;'>INF27-2</div>
+                            <button class='result-btn' style='width:100%; padding:10px;' onclick='copiarBancoInfluencer("INF27-2.png")'>📋 Copiar Prompt</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="page" id="page-acervo-vip">
+                <div style="margin-bottom:30px;">
+                    <h2 style="font-size:28px; font-weight:700; color:#fff;">💎 Acervo VIP</h2>
+                    <p style="color:#aaa; font-size:16px;">Clique em um nicho para acessar o conteúdo exclusivo no Notion.</p>
+                </div>
+                
+                <div style="max-width: 800px; padding-bottom: 50px;">
+                    <a href="https://app.notion.com/p/6b8474bf3b7d825b8eb601793df1c6d8?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 73 Prompts de Influencer de I.A</a>
+                    <a href="https://app.notion.com/p/c2d474bf3b7d83ec9e7001a70a599078?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 45 Prompts Influencer de Biquini</a>
+                    <a href="https://app.notion.com/p/d64474bf3b7d83fca56701ee30d80345?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 27 Prompts de Rostos Realistas</a>
+                    <a href="https://app.notion.com/p/98f474bf3b7d83048561018a3058d274?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 43 Prompts GYM | Academia</a>
+                    <a href="https://app.notion.com/p/656474bf3b7d823a80bd814de204745b?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 20 Prompts de Influencers de I.A + Produto</a>
+                    <a href="https://app.notion.com/p/c2f474bf3b7d8386831601617470180f?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 13 Prompts Influencer no Rolê/Noite</a>
+                    <a href="https://app.notion.com/p/0bf474bf3b7d83709c3381c9f504e9ca?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 9 Prompts Influencers em Podcast</a>
+                    <a href="https://app.notion.com/p/6f2474bf3b7d8252bf3e81ecc274c5b7?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 15 Prompts Macro/Zoom Realista</a>
+                    <a href="https://app.notion.com/p/8b2474bf3b7d83569f1781abe1da2aec?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 7 Prompts Realismo (Homem Cafeteria + Relógio)</a>
+                    <a href="https://app.notion.com/p/dc4474bf3b7d83f68d530137edb9950d?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts Influencer Corredora 🏃‍♀️</a>
+                    <a href="https://app.notion.com/p/3e6474bf3b7d8314a77e016712fb73a9?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 6 Prompt que gera I.A com cara de PESSOA REAL</a>
+                    <a href="https://app.notion.com/p/907474bf3b7d839db9b281681dd56958?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts Pessoas Estranhas</a>
+                    <a href="https://app.notion.com/p/c71474bf3b7d82469b8e010b85d39c82?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 9 Prompts Estilo STREETWEAR [Influencer de I.A]</a>
+                    <a href="https://app.notion.com/p/c2c474bf3b7d82c8a3e001822366ea7d?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> Realismo (Senhora com o Pão)</a>
+                    <a href="https://app.notion.com/p/c88474bf3b7d824886bd01c10443f1bc?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 10 Prompts de idosos</a>
+                    <a href="https://app.notion.com/p/058474bf3b7d83bf89958134eb97fb92?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts modelos Plus Size</a>
+                    <a href="https://app.notion.com/p/bf6474bf3b7d83e39ad281fad0a90d09?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 6 Prompts de Homens EXPERTS</a>
+                    <a href="https://app.notion.com/p/f1d474bf3b7d8286b3d68123a20aef9a?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 6 Prompts de Mulheres EXPERTS</a>
+                    <a href="https://app.notion.com/p/32d474bf3b7d82dfac69818dcda42987?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts Influencer de biquini</a>
+                    <a href="https://app.notion.com/p/6d7474bf3b7d833589b181145e64eeee?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 4 Prompts Homem na praia</a>
+                    <a href="https://app.notion.com/p/dd7474bf3b7d82f9a25401e74d50f28b?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts mulher tatuada</a>
+                    <a href="https://app.notion.com/p/efb474bf3b7d822e88a501f2fa22a56a?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 15 Prompts Estilo Bar</a>
+                    <a href="https://app.notion.com/p/a08474bf3b7d836a830a01411ab8f61a?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts senhor no bar</a>
+                    <a href="https://app.notion.com/p/9e4474bf3b7d83909bea0186ad388e6c?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> Prompts Jogador de basquete</a>
+                    <a href="https://app.notion.com/p/05c474bf3b7d8256bee101a1856a91ce?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts estilo Rock In Roll</a>
+                    <a href="https://app.notion.com/p/301474bf3b7d828a9c86814e16b99b6f?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 6 Prompts Lifestyle</a>
+                    <a href="https://app.notion.com/p/ac3474bf3b7d8230b49c81bc939b7d11?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 5 Prompts Provador de Roupa</a>
+                    <a href="https://app.notion.com/p/32e474bf3b7d8207b08b0165658eb6fa?pvs=21" target="_blank" class="acervo-vip-link"><span class="acervo-vip-icon">💎</span> 6 Prompts Jogador de futebol</a>
+                </div>
+            </div>
+
+            <div class="page" id="page-scripts-gerados">
+                <div class="page-header">
+                    <div class="page-icon">&#128196;</div>
+                    <div>
+                        <div class="page-title">Scripts gerados</div>
+                        <div class="page-sub">Seus roteiros criados com IA.</div>
+                    </div>
+                </div>
+                <div id="lista-scripts" class="lista-grid">
+                    <div style="color:#555;text-align:center;padding:40px;">Nenhum script salvo ainda.</div>
+                </div>
+            </div>
+
+            <div class="page" id="page-imagens-geradas">
+                <div class="page-header">
+                    <div class="page-icon">&#128247;</div>
+                    <div>
+                        <div class="page-title">Imagens geradas</div>
+                        <div class="page-sub">Seus influencers criados com IA.</div>
+                    </div>
+                </div>
+                <div id="lista-imagens" class="imgs-grid"></div>
+            </div>
+
+            <div class="page" id="page-perfil">
+                <div class="page-header">
+                    <div class="page-icon">&#128100;</div>
+                    <div>
+                        <div class="page-title">Meu Perfil</div>
+                        <div class="page-sub">Suas informacoes de conta.</div>
+                    </div>
+                </div>
+                <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:32px;max-width:500px;">
+                    <div style="display:flex;align-items:center;gap:20px;margin-bottom:32px;">
+                        <div style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#a78bfa,#ec4899);display:flex;align-items:center;justify-content:center;font-size:28px;font-weight:700;" id="perfil-avatar-big">T</div>
+                        <div>
+                            <div style="font-size:20px;font-weight:700;" id="perfil-nome-big">teste</div>
+                            <div style="color:#888;font-size:14px;" id="perfil-plano-big">Plano Free</div>
+                        </div>
+                    </div>
+                    <div style="background:#0f0f1a;border-radius:12px;padding:20px;">
+                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #1e1e35;">
+                            <span style="color:#888;font-size:14px;">Scripts restantes</span>
+                            <span style="font-size:14px;font-weight:600;color:#a78bfa;" id="stat-scripts">-</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #1e1e35;">
+                            <span style="color:#888;font-size:14px;">Imagens restantes</span>
+                            <span style="font-size:14px;font-weight:600;" id="stat-imagens">-</span>
+                        </div>
+                        <div style="display:flex;justify-content:space-between;padding:12px 0;">
+                            <span style="color:#888;font-size:14px;">Imagens Pro restantes</span>
+                            <span style="font-size:14px;font-weight:600;color:#a78bfa;" id="stat-imagens-pro">-</span>
+                        </div>
+                    </div>
+                    <button class="gerar-btn" style="background:linear-gradient(135deg,#f87171,#ef4444);margin-top:20px;" onclick="doLogout()">&#128682; Sair da conta</button>
+                </div>
+            </div>
+
+        </div> </div> </div> <script>
+// BANCO DE PROMPTS IMAGENS INFLUENCIADORES
+const bancoPrompts = {"INF1.png": "Nano Banana 2 { \"subject\": \"25-year-old Caucasian woman, athletic build, long dark hair tied in a messy bun, freckles\", \"clothing\": \"white ribbed tank top, medium-wash denim shorts\", \"action\": \"holding a black smartphone, taking a mirror selfie\", \"setting\": \"luxurious warm-toned beige bathroom with marble countertops\" }", "INF1-PRO.png": "Nano Banana 2 { \"subject\": \"25-year-old Caucasian woman, athletic build, long dark hair tied in a messy bun, freckles\", \"clothing\": \"white ribbed tank top, medium-wash denim shorts\", \"action\": \"holding a black smartphone, taking a mirror selfie\", \"setting\": \"luxurious warm-toned beige bathroom with marble countertops\" }", "INF-2.png": "Nano Banana 2 { \"subject\": \"25-year-old Caucasian woman, athletic build, red hair tied in a high messy bun, heavily freckled skin glistening with sweat\", \"clothing\": \"white ribbed tank top, denim shorts\", \"action\": \"holding a black smartphone taking a mirror selfie\", \"setting\": \"luxurious beige bathroom\" }", "INF3.png": "Nano Banana 2 { \"subject\": \"25-year-old Caucasian woman, dark brown hair tied up, glistening sweaty skin\", \"clothing\": \"white lace corset crop top, delicate gold body chain\", \"action\": \"smiling broadly with tongue sticking out, holding a clear cocktail and a bottle of Absolut Vodka\", \"setting\": \"outdoors at a night party under a wooden gazebo with string lights\" }", "INF4.png": "Nano Banana 2 { \"subject\": \"25-year-old Caucasian woman, deeply tanned fitness build, prominent toned abs, heavily tattooed arms and hands, wet-look blonde hair\", \"clothing\": \"white bandeau tube top, brown yoga leggings\", \"action\": \"taking a mirror selfie, serious confident gaze\", \"setting\": \"inside a modern stainless steel elevator\" }", "INF5.png": "Nano Banana 2 { \"subject\": \"22-year-old Latino man, athletic build, thick dark wavy middle-part hair, tanned skin\", \"clothing\": \"black leather jacket over a black t-shirt, silver rings\", \"action\": \"taking a mirror selfie, giving a thumbs-up gesture\", \"setting\": \"modern bedroom with white walls and wooden closet doors\" }", "INF6.png": "Nano Banana 2 { \"subject\": \"22-year-old Latina woman, long straight black hair, extensive floral tattoo sleeves on both arms\", \"clothing\": \"brown tube top, matching brown drawstring sweatshorts\", \"action\": \"playful duck lips, taking a mirror selfie holding a phone case with red hearts\", \"setting\": \"modern bathroom with beige tiles and glass shower\" }", "INF10.png": "Nano Banana 2 { \"subject\": \"24-year-old Caucasian woman, curvy build, long blonde hair, heavily freckled light skin\", \"clothing\": \"tight grey ribbed tank top, gold kangaroo pendant necklace\", \"action\": \"close-up front-facing selfie, relaxed seductive gaze\", \"setting\": \"modern bathroom with dark brown tiles\" }", "INF11.png": "Nano Banana 2 { \"subject\": \"24-year-old woman, long wavy dark brown hair, flawless makeup\", \"clothing\": \"black ribbed long-sleeve top\", \"action\": \"front-facing portrait, confident gaze\", \"setting\": \"indoors, soft natural lighting, cozy room with plants in the background\" }", "INF12.png": "Nano Banana 2 { \"subject\": \"23-year-old Caucasian woman, long straight blonde hair\", \"clothing\": \"black long-sleeve henley crop top, white patterned shorts\", \"action\": \"speaking directly to the camera, holding a small black microphone close to her mouth\", \"setting\": \"modern living room with large windows and a dining table\" }", "INF13.png": "Nano Banana 2 { \"subject\": \"Athletic Caucasian woman, blonde hair\", \"clothing\": \"sage green ribbed athletic sports bra, matching high-waisted gym leggings\", \"action\": \"split image: top half is a close-up selfie, bottom half is a side-profile mirror selfie showing glutes\", \"setting\": \"inside a commercial gym with equipment\" }", "INF14.png": "Nano Banana 2 { \"subject\": \"Curvy Caucasian woman, mid-30s, long wavy blonde hair, smiling brightly with red lipstick\", \"clothing\": \"black wrap dress with small pink floral pattern, deep cleavage\", \"action\": \"taking an extended arm selfie while holding a paper coffee cup\", \"setting\": \"outdoors on a historic cobblestone street with colorful colonial buildings and a church in the background\" }", "INF15.png": "Nano Banana 2 { \"subject\": \"Young Latina woman, long straight dark brown hair, soft smile\", \"clothing\": \"white sundress with pink floral print, deep V-neck showing cleavage\", \"action\": \"front-facing portrait\", \"setting\": \"standing indoors near a modern kitchen and an open doorway leading to a patio\" }", "INF16.png": "Nano Banana 2 { \"subject\": \"Pregnant brunette woman, long dark hair, visible bare pregnant belly\", \"clothing\": \"maroon one-shoulder long-sleeve crop top, beige pants unbuttoned at the waist\", \"action\": \"standing, gesturing with hands while speaking\", \"setting\": \"modern kitchen with grey cabinets and a French press on the counter\" }", "INF16-2.png": "Nano Banana 2 { \"subject\": \"Pregnant brunette woman, long dark hair, flawless makeup, visible bare pregnant belly\", \"clothing\": \"maroon one-shoulder long-sleeve crop top, beige pants unbuttoned\", \"action\": \"sitting comfortably, resting hands near her belly, looking directly at the camera\", \"setting\": \"modern living room on a light beige couch\" }", "INF17.png": "Nano Banana 2 { \"subject\": \"Pregnant blonde woman, long wavy hair, visible bare pregnant belly\", \"clothing\": \"brown lace bralette top, white loose shorts\", \"action\": \"sitting down, speaking to the camera while holding a small black lavalier microphone in one hand, other hand resting on her belly\", \"setting\": \"indoors in a bright modern home\" }", "INF17-2.png": "Nano Banana 2 { \"subject\": \"Pregnant blonde woman, long wavy hair, visible bare pregnant belly\", \"clothing\": \"brown ribbed tank top, white loose shorts\", \"action\": \"sitting down, speaking to the camera while holding a small black lavalier microphone, resting hand on her belly\", \"setting\": \"indoors in a bright modern home with hanging woven lamps\" }", "INF18.jpg": "Nano Banana 2 { \"subject\": \"Young woman of color, natural wavy dark hair, genuine soft smile\", \"clothing\": \"simple white ribbed tank top\", \"action\": \"sitting at a table, taking a selfie\", \"setting\": \"inside a cafe, a half-empty latte in a light green cup is on the wooden table in front of her\" }", "INF19.jpg": "Nano Banana 2 { \"subject\": \"Young redhead woman, long straight red hair\", \"clothing\": \"black button-down shirt slightly unbuttoned showing cleavage, black leggings\", \"action\": \"looking confused/serious, holding the microphone of white wired earphones near her mouth\", \"setting\": \"indoors in a bedroom with a bookshelf and plants\" }", "INF20.png": "Nano Banana 2 { \"subject\": \"Young Caucasian woman, long straight black hair, striking blue eyes\", \"clothing\": \"black spaghetti strap crop top, black jeans\", \"action\": \"smiling with bright red lipstick, thumbs hooked in pockets, front-facing portrait\", \"setting\": \"indoors in a cozy bedroom with striped wallpaper\" }", "INF21.png": "Nano Banana 2 { \"subject\": \"Young Latina woman, voluminous long dark wavy hair, glamorous makeup with flushed cheeks\", \"clothing\": \"white textured halter vest with a deep V-neck, carrying a burgundy shoulder bag\", \"action\": \"head slightly tilted back, confident pouty gaze\", \"setting\": \"indoors in a modern bathroom with a glass shower\" }", "INF22.png": "Nano Banana 2 { \"subject\": \"Young Caucasian woman, long wavy blonde hair\", \"clothing\": \"black draped halter crop top with a deep V-neck, black choker, black cargo pants\", \"action\": \"head tilted, smiling softly, taking a mirror selfie\", \"setting\": \"modern bedroom or walk-in closet, her back reflected in the mirror behind her\" }", "INF23.jpg": "Nano Banana 2 { \"subject\": \"Young Latina woman, long beautiful dark brown wavy hair\", \"clothing\": \"simple beige tank top\", \"action\": \"close-up front-facing shot, mouth slightly open as if speaking to the camera\", \"setting\": \"indoors, a glowing ring light is visible in the blurred background\" }", "INF24.png": "Nano Banana 2 { \"subject\": \"Young Caucasian woman, long wavy blonde hair\", \"clothing\": \"black ribbed long-sleeve top with a deep V-neck showing cleavage, gold pendant necklace\", \"action\": \"engaged expression, speaking directly to the viewer while holding a small black wireless lapel microphone\", \"setting\": \"indoors with a colorful abstract painting on the wall behind her\" }", "INF25.png": "Nano Banana 2 { \"subject\": \"Young redhead woman, hair tied up, sweaty glistening skin\", \"clothing\": \"white ribbed sports bra, white high-waisted gym shorts\", \"action\": \"taking a mirror selfie holding a brown phone\", \"setting\": \"indoors in a gym locker room or hallway with grey walls\" }", "INF26.png": "Nano Banana 2 { \"subject\": \"Young blonde woman, heavily tattooed arms with floral sleeves, sweaty skin\", \"clothing\": \"white tube top, white gym leggings\", \"action\": \"playful duck lips, taking a mirror selfie\", \"setting\": \"modern bathroom with a glass shower stall\" }", "INF27.png": "Nano Banana 2 { \"subject\": \"Young Caucasian woman, blonde hair, sweaty glistening skin\", \"clothing\": \"white sports bra, black oval sunglasses, gold hoop earrings\", \"action\": \"sitting inside a car, drinking from a large clear plastic cup of Dunkin iced coffee with an orange straw\", \"setting\": \"inside a car with dark leather seats, sunroof open\" }", "INF27-2.png": "Nano Banana 2 { \"subject\": \"Young Caucasian woman, blonde hair, sweaty glistening skin\", \"clothing\": \"white ribbed sports bra, black oval sunglasses, gold hoop earrings\", \"action\": \"close-up, sitting inside a car, sipping from a large clear plastic cup of Dunkin iced coffee\", \"setting\": \"inside a car with dark leather seats\" }"};
+
+function copiarBancoInfluencer(filename) {
+    let texto = bancoPrompts[filename];
+    if(texto) {
+        texto = texto + ", strictly vertical 9:16 aspect ratio, close-up portrait, filling the frame, photorealistic. Format 9:16.";
+        navigator.clipboard.writeText(texto).then(function() {
+            alert("✅ Prompt fidedigno copiado! O formato vertical (9:16) foi adicionado automaticamente.");
+        });
+    }
+}
+
+function abrirImagemModal(src) {
+    document.getElementById('imgModalSrc').src = src;
+    document.getElementById('imagemModal').style.display = 'flex';
+}
+
+function fecharImagemModal() {
+    document.getElementById('imagemModal').style.display = 'none';
+}
+
+// SCRIPTS PRINCIPAIS DO SISTEMA
+const API = "";
+var token = "";
+var perfilAtual = "rafaela";
+var currentTalkId = "";
+var uploadedImageB64 = "";
+var proUploadB64 = "";
+
+function showLogin(){document.getElementById("app-screen").style.display="none";document.getElementById("login-screen").style.display="flex";}
+
+// --- ALTERADO PARA ABRIR A DASHBOARD PRIMEIRO ---
+function showApp(username){
+    document.getElementById("login-screen").style.display="none";
+    document.getElementById("app-screen").style.display="flex";
+    document.getElementById("user-name-top").textContent=username;
+    document.getElementById("user-avatar").textContent=username[0].toUpperCase();
+    carregarCreditos();
+    showPage('dashboard', document.getElementById('menu-dashboard')); 
+}
+
+function showRegister(){document.getElementById("register-section").style.display="block";}
+async function doLogin(){
+    var u=document.getElementById("login-user").value.trim();
+    var p=document.getElementById("login-pass").value.trim();
+    var err=document.getElementById("login-err");
+    err.style.display="none";
+    try{
+        var r=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+        var d=await r.json();
+        if(d.access_token){token=d.access_token;showApp(u);}
+        else{err.textContent=d.detail||"Erro ao entrar.";err.style.display="block";}
+    }catch(e){err.textContent="Erro ao conectar.";err.style.display="block";}
+}
+async function doRegister(){
+    var u=document.getElementById("reg-user").value.trim();
+    var p=document.getElementById("reg-pass").value.trim();
+    var r=await fetch(API+"/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
+    var d=await r.json();
+    if(d.msg){alert("Conta criada! Faca login.");}
+    else{alert(d.detail||"Erro ao criar conta.");}
+}
+function doLogout(){token="";currentTalkId="";showLogin();}
+function showPage(page,el){
+    document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
+    document.querySelectorAll(".sidebar-item").forEach(function(i){i.classList.remove("active");});
+    document.getElementById("page-"+page).classList.add("active");
+    if(el)el.classList.add("active");
+}
+function setExemplo(val){document.getElementById("produto").value=val;document.getElementById("char-count").textContent=val.length+"/100";}
+function selecionarPerfil(perfil,el){
+    perfilAtual=perfil;
+    document.querySelectorAll(".perfil-card").forEach(function(c){c.classList.remove("ativo");});
+    el.classList.add("ativo");
+    var custom=document.getElementById("custom-perfil");
+    if(custom)custom.style.display=perfil==="custom"?"block":"none";
+}
+function atualizarCamposCustom(genero){
+    var sc=document.getElementById("custom-cabelo");
+    var se=document.getElementById("custom-estilo");
+    var sx=document.getElementById("custom-expressao");
+    if(genero==="masculino"){
+        sc.innerHTML="<option value='short dark hair'>Curto escuro</option><option value='short blonde hair'>Curto loiro</option><option value='short brown hair'>Curto castanho</option><option value='curly dark hair'>Cacheado escuro</option>";
+        se.innerHTML="<option value='fitness influencer, sportswear'>Fitness</option><option value='business casual, elegant'>Executivo</option><option value='streetwear, casual urban'>Streetwear</option><option value='luxury lifestyle, premium outfit'>Luxo</option>";
+        sx.innerHTML="<option value='confident smile'>Sorriso confiante</option><option value='serious strong look'>Olhar forte</option><option value='friendly energetic expression'>Expressao energetica</option><option value='charismatic smile'>Sorriso carismatico</option>";
+    }else{
+        sc.innerHTML="<option value='long blonde hair'>Longo loiro</option><option value='long dark brown hair'>Longo moreno</option><option value='long black hair'>Longo preto</option><option value='long red hair'>Longo ruivo</option><option value='curly black hair'>Cacheado preto</option>";
+        se.innerHTML="<option value='fashion influencer, trendy outfit'>Fashion</option><option value='fitness influencer, sports outfit'>Fitness</option><option value='luxury lifestyle, elegant outfit'>Luxo</option><option value='casual street style'>Casual</option>";
+        sx.innerHTML="<option value='energetic smile'>Sorriso energetico</option><option value='confident look'>Olhar confiante</option><option value='friendly smile'>Sorriso amigavel</option><option value='serious professional look'>Expressao seria</option>";
+    }
+}
+function handleUpload(input){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){uploadedImageB64=e.target.result.split(",")[1];document.getElementById("upload-thumb").src=e.target.result;document.getElementById("upload-name").textContent=file.name;document.getElementById("upload-size").textContent=(file.size/1024).toFixed(0)+" KB";document.getElementById("upload-preview-area").style.display="flex";document.getElementById("upload-area").style.display="none";};
+    reader.readAsDataURL(file);
+}
+function removeUpload(){uploadedImageB64="";document.getElementById("file-input").value="";document.getElementById("upload-preview-area").style.display="none";document.getElementById("upload-area").style.display="block";}
+function handleProUpload(input){
+    var file=input.files[0];if(!file)return;
+    var reader=new FileReader();
+    reader.onload=function(e){proUploadB64=e.target.result.split(",")[1];document.getElementById("pro-upload-thumb").src=e.target.result;document.getElementById("pro-upload-name").textContent=file.name;document.getElementById("pro-upload-size").textContent=(file.size/1024).toFixed(0)+" KB";document.getElementById("pro-upload-preview").style.display="flex";document.getElementById("pro-upload-area").style.display="none";};
+    reader.readAsDataURL(file);
+}
+function removeProUpload(){proUploadB64="";document.getElementById("pro-file-input").value="";document.getElementById("pro-upload-preview").style.display="none";document.getElementById("pro-upload-area").style.display="block";}
+function showLoading(text){document.getElementById("loading-text").textContent=text||"Gerando com IA...";document.getElementById("loading-overlay").style.display="flex";}
+function hideLoading(){document.getElementById("loading-overlay").style.display="none";}
+function verImagem(){var src=document.getElementById("img-gerada").src;document.getElementById("modal-img-src").src=src;document.getElementById("modal-img").style.display="flex";}
+function verImagemPro(){document.getElementById("modal-img-src").src=document.getElementById("pro-img").src;document.getElementById("modal-img").style.display="flex";}
+async function carregarCreditos(){
+    if(!token)return;
+    try{
+        var r=await fetch(API+"/creditos",{headers:{"Authorization":"Bearer "+token}});
+        var d=await r.json();
+        var plano=d.plano.charAt(0).toUpperCase()+d.plano.slice(1);
+        document.getElementById("credits-label").textContent="Plano "+plano;
+        var sr=d.scripts.limite-d.scripts.usados;
+        var ir=d.imagens.limite-d.imagens.usados;
+        var ipr=d.imagens_pro.limite-d.imagens_pro.usados;
+        document.getElementById("credits-val").textContent=sr+" scripts | "+ir+" imgs | "+ipr+" pro";
+        if(sr<=0||ir<=0)document.getElementById("credits-val").style.color="#f87171";
+        else document.getElementById("credits-val").style.color="#fff";
+        var es=document.getElementById("stat-scripts");var ei=document.getElementById("stat-imagens");var eip=document.getElementById("stat-imagens-pro");
+        if(es)es.textContent=sr;if(ei)ei.textContent=ir;if(eip)eip.textContent=ipr;
+    }catch(e){console.log("erro creditos:",e);}
+}
+async function gerarScript(){
+    var produto=document.getElementById("produto").value.trim();
+    if(!produto){alert("Digite o produto!");return;}
+    showLoading("Gerando script com IA...");
+    try{
+        var r=await fetch(API+"/gerar-script",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({produto:produto,nicho:document.getElementById("nicho").value,tom:document.getElementById("tom").value,perfil:perfilAtual})});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.script){document.getElementById("result-empty").style.display="none";document.getElementById("result-content").style.display="block";document.getElementById("result-script").textContent=d.script;document.getElementById("video-script").value=d.script;carregarCreditos();}
+        else{alert("Erro ao gerar script.");}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function copiarScript(){navigator.clipboard.writeText(document.getElementById("result-script").textContent);alert("Script copiado!");}
+function salvarScript(){
+    var texto=document.getElementById("result-script").textContent;
+    var produto=document.getElementById("produto").value;
+    if(!texto)return;
+    var scripts=JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    scripts.unshift({produto:produto,texto:texto,data:new Date().toLocaleDateString("pt-BR")});
+    localStorage.setItem("influencia_scripts",JSON.stringify(scripts));
+    alert("Script salvo!");
+}
+function renderScripts(){
+    var scripts=JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    var lista=document.getElementById("lista-scripts");
+    if(!lista)return;
+    if(scripts.length===0){lista.innerHTML="<div style='color:#555;text-align:center;padding:40px;'>Nenhum script salvo ainda.</div>";return;}
+    var h="";
+    for(var i=0;i<scripts.length;i++){
+        h+="<div style='background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:20px;margin-bottom:16px;'><div style='display:flex;justify-content:space-between;margin-bottom:12px;'><div style='font-weight:700;'>"+scripts[i].produto+"</div><div style='color:#555;font-size:12px;'>"+scripts[i].data+"</div></div><div style='color:#aaa;font-size:14px;line-height:1.6;margin-bottom:12px;'>"+scripts[i].texto+"</div><div style='display:flex;gap:8px;'><button class='result-btn' onclick='copiarScriptSalvo("+i+")'>📋 Copiar</button><button class='result-btn' style='color:#f87171;border-color:#f87171;' onclick='deletarScript("+i+")'>🗑️ Deletar</button></div></div>";
+    }
+    lista.innerHTML=h;
+}
+
+function copiarScriptSalvo(i){
+    var scripts=JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    if(scripts[i]){
+        navigator.clipboard.writeText(scripts[i].texto).then(function(){
+            alert("Copiado com sucesso! Pode colar no Word.");
+        });
+    }
+}
+
+function deletarScript(i){
+    var scripts = JSON.parse(localStorage.getItem("influencia_scripts")||"[]");
+    scripts.splice(i,1);
+    localStorage.setItem("influencia_scripts", JSON.stringify(scripts));
+    renderScripts();
+}
+async function gerarImagem(){
+    var produto=document.getElementById("img-produto").value;
+    showLoading("Gerando influencer com IA...");
+    try{
+        var body={perfil:perfilAtual,produto:produto,imagem_produto_b64:"",cabelo:"",olhos:"",etnia:"",cenario:""};
+        if(perfilAtual==="custom"){
+            body.custom_nome=document.getElementById("custom-nome").value;
+            body.custom_idade=document.getElementById("custom-idade").value;
+            body.custom_genero=document.getElementById("custom-genero").value;
+            body.custom_etnia=document.getElementById("custom-etnia").value;
+            body.custom_cabelo=document.getElementById("custom-cabelo").value;
+            body.custom_olhos="brown eyes";
+            body.custom_estilo=document.getElementById("custom-estilo").value;
+            body.custom_cenario=document.getElementById("custom-cenario").value;
+            body.custom_expressao=document.getElementById("custom-expressao").value;
+            body.custom_extra=document.getElementById("custom-extra").value;
+        }
+        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify(body)});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.url){
+            var url=d.url;
+            document.getElementById("img-gerada").src=url;
+            document.getElementById("img-download").href=url;
+            document.getElementById("img-result").style.display="block";
+            document.getElementById("result-img").src=url;
+            document.getElementById("result-img-download").href=url;
+            document.getElementById("result-img-area").style.display="block";
+            document.getElementById("video-imagem").value=window.location.origin+url;
+            var imgs=JSON.parse(localStorage.getItem("influencia_imagens")||"[]");
+            imgs.unshift({url:url,produto:produto,data:new Date().toLocaleDateString("pt-BR")});
+            localStorage.setItem("influencia_imagens",JSON.stringify(imgs));
+            carregarCreditos();
+        }else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+async function gerarImagemPro(){
+    if(!proUploadB64){alert("Envie a foto do produto primeiro!");return;}
+    showLoading("Gerando Influencer Pro...");
+    try{
+        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({perfil:document.getElementById("pro-perfil").value,produto:document.getElementById("pro-produto").value,imagem_produto_b64:proUploadB64})});
+        var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
+        if(d.url){document.getElementById("pro-img").src=d.url;document.getElementById("pro-download").href=d.url;document.getElementById("pro-result-empty").style.display="none";document.getElementById("pro-result").style.display="block";carregarCreditos();}
+        else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function renderImagens(){
+    var imagens=JSON.parse(localStorage.getItem("influencia_imagens")||"[]");
+    var lista=document.getElementById("lista-imagens");
+    if(!lista)return;
+    if(imagens.length===0){lista.innerHTML="<div style='color:#555;padding:40px;'>Nenhuma imagem salva ainda.</div>";return;}
+    var h="";
+    for(var i=0;i<imagens.length;i++){h+="<div class='img-card'><img src='"+imagens[i].url+"'><div class='img-card-info'><div style='font-size:13px;font-weight:600;'>"+imagens[i].produto+"</div><div style='font-size:11px;color:#555;'>"+imagens[i].data+"</div><a href='"+imagens[i].url+"' download class='result-btn' style='margin-top:8px;font-size:12px;display:flex;'>Baixar</a></div></div>";}
+    lista.innerHTML=h;
+}
+async function enviarVideo(){
+    var script=document.getElementById("video-script").value.trim();
+    var imagem=document.getElementById("video-imagem").value.trim();
+    var voz=document.getElementById("video-voz").value;
+    if(!script||!imagem){alert("Preencha o script e a URL da imagem!");return;}
+    showLoading("Enviando para gerar video...");
+    try{
+        var r=await fetch(API+"/gerar-video",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({script:script,imagem_url:imagem,voz:voz})});
+        var d=await r.json();
+        if(d.video_id){currentTalkId=d.video_id;document.getElementById("status-text").textContent="Video sendo processado! ID: "+d.video_id;document.getElementById("status-msg").style.display="block";}
+        else{alert("Erro: "+JSON.stringify(d));}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+async function verificarVideo(){
+    if(!currentTalkId){alert("Nenhum video em processamento!");return;}
+    showLoading("Verificando video...");
+    try{
+        var r=await fetch(API+"/verificar-video?video_id="+currentTalkId,{headers:{"Authorization":"Bearer "+token}});
+        var d=await r.json();
+        var status=d.status||"";
+        if(status==="completed"){document.getElementById("status-text").innerHTML="Pronto! <a href='"+d.video_url+"' target='_blank' style='color:#a78bfa;'>Clique aqui para ver o video</a>";}
+        else{document.getElementById("status-text").textContent="Status: "+status+". Aguarde e tente novamente.";}
+    }catch(e){alert("Erro: "+e.message);}
+    hideLoading();
+}
+function atualizarPerfil(){
+    var nome=document.getElementById("user-name-top").textContent;
+    var elNome=document.getElementById("perfil-nome-big");
+    var elAvatar=document.getElementById("perfil-avatar-big");
+    if(elNome)elNome.textContent=nome;
+    if(elAvatar)elAvatar.textContent=nome[0].toUpperCase();
+    carregarCreditos();
+}
+</script>
+</body>
+</html>
