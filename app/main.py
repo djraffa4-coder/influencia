@@ -8,7 +8,8 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-import os`nimport requests
+import os
+import requests
 from app.database import Base, engine, SessionLocal
 from app.models import User as DBUser
 from app.routes.auth import router as script_router
@@ -216,3 +217,4 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"[ERRO GRAVE] Falha ao processar webhook: {str(e)}")
         return {"status": "error", "message": str(e)}
+
