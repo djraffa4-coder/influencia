@@ -24,6 +24,13 @@ app.add_middleware(
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
+
+from fastapi.responses import RedirectResponse
+
+@app.get("/")
+def raiz():
+    return RedirectResponse(url="/app")
+
 @app.get("/app")
 def frontend():
     return FileResponse("static/index.html")
