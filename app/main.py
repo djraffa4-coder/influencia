@@ -8,7 +8,7 @@ from passlib.context import CryptContext
 from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
-import requests
+import os`nimport requests
 from app.database import Base, engine, SessionLocal
 from app.models import User as DBUser
 from app.routes.auth import router as script_router
