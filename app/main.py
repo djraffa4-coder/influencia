@@ -197,7 +197,9 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
                         db_user = db.query(DBUser).filter(DBUser.email == payer_email).first()
 
                         if db_user:
-                            db_user.plano = "pro"
+                            external_ref = payment_data.get("external_reference", "").lower().strip()
+                            planos = {"kit_teste": "starter", "kit_pro": "pro", "kit_agencia": "business"}
+                            db_user.plano = planos.get(external_ref, "pro")
                             db.commit()
                             print(f"[SUCESSO] Plano PRO liberado para o e-mail: {payer_email}!")
                         else:
