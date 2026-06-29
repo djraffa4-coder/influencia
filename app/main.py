@@ -67,7 +67,7 @@ ACCESS_TOKEN_EXPIRE_MINUTES = 60
 oauth2_scheme = HTTPBearer()
 
 # Substitua pelo seu Access Token de Producao real do Mercado Pago
-MP_ACCESS_TOKEN = "SUA_CHAVE_AQUI"
+MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
 
 class User(BaseModel):
     username: str

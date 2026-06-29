@@ -241,7 +241,7 @@ class VideoRequest(BaseModel):
 
 @router.post("/gerar-video")
 def gerar_video(req: VideoRequest, user: str = Depends(get_current_user)):
-    HEYGEN_KEY = "sk_V2_hgu_koBjfsjHTK1_Y2TvU1KPbzLokVeVYKAmkrC81k168YjJ"
+    HEYGEN_KEY = os.getenv("HEYGEN_KEY")
     headers = {"X-Api-Key": HEYGEN_KEY, "Content-Type": "application/json"}
     payload = {
         "video_inputs": [{"character": {"type": "talking_photo", "talking_photo_url": req.imagem_url}, "voice": {"type": "text", "input_text": req.script, "voice_id": "9da3f8b1064a4b5ba1236e84335c08df"}}],
@@ -254,7 +254,7 @@ def gerar_video(req: VideoRequest, user: str = Depends(get_current_user)):
 
 @router.get("/verificar-video")
 def verificar_video(video_id: str, user: str = Depends(get_current_user)):
-    HEYGEN_KEY = "sk_V2_hgu_koBjfsjHTK1_Y2TvU1KPbzLokVeVYKAmkrC81k168YjJ"
+    HEYGEN_KEY = os.getenv("HEYGEN_KEY")
     headers = {"X-Api-Key": HEYGEN_KEY}
     response = requests.get(f"https://api.heygen.com/v2/video/{video_id}", headers=headers)
     data = response.json()
