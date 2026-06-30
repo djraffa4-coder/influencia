@@ -191,7 +191,7 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
         payload_imagen = {
             "contents": [{
                 "parts": [
-                    {"text": f"Generate a photorealistic portrait of a beautiful Brazilian woman, {perfil_desc}. She is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
+                    {"text": f"Generate a photorealistic portrait of a {("man" if req.perfil in ["rafael","lucas","pedro","mateus"] else "beautiful woman")}, {perfil_desc}. {("He" if req.perfil in ["rafael","lucas","pedro","mateus"] else "She")} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": req.imagem_produto_b64}}
                 ]
             }],
@@ -263,5 +263,7 @@ def verificar_video(video_id: str, user: str = Depends(get_current_user)):
     status = data.get("data", {}).get("status", "")
     video_url = data.get("data", {}).get("video_url", "")
     return {"status": status, "video_url": video_url}
+
+
 
 
