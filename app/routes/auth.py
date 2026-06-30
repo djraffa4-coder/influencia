@@ -179,8 +179,10 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
         extras = ", ".join(extras_list)
         prompt = base + (", " + extras if extras else "")
 
-    produto_txt = f", holding {descricao_produto}, showing product to camera, TikTok product review, viral content" if descricao_produto else ""
+    produto_txt = f", holding a {descricao_produto} in her hand, the {descricao_produto} clearly visible, showing the {descricao_produto} to camera, TikTok product review, product placement, {descricao_produto} in focus, viral content" if descricao_produto else ""
     prompt = prompt + produto_txt
+    if descricao_produto:
+        prompt = f"product photography, {descricao_produto} clearly visible, " + prompt
 
     if req.imagem_produto_b64:
         GEMINI_KEY = os.getenv("GEMINI_KEY", "")
@@ -261,3 +263,4 @@ def verificar_video(video_id: str, user: str = Depends(get_current_user)):
     status = data.get("data", {}).get("status", "")
     video_url = data.get("data", {}).get("video_url", "")
     return {"status": status, "video_url": video_url}
+
