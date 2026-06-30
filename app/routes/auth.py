@@ -62,19 +62,19 @@ PERFIS = {
     },
     "rafael": {
         "nome": "Rafael Costa",
-        "prompt": "28 year old Brazilian man from Rio de Janeiro, short dark hair, athletic build, confident expression, fitness and sports influencer, TikTok creator, modern sportswear, gym background, photorealistic, 8k, dynamic lighting"
+        "prompt": "28 year old Black Brazilian man, muscular athletic build, defined abs, short fade haircut, strong jawline, confident powerful expression, fitness influencer, TikTok creator, shirtless or fitted sportswear, gym background, photorealistic, 8k, dynamic lighting"
     },
     "lucas": {
         "nome": "Lucas Mendes",
-        "prompt": "30 year old Brazilian man from Sao Paulo, well groomed dark hair, elegant posture, premium lifestyle influencer, TikTok creator, business casual outfit, luxury apartment background, photorealistic, 8k, cinematic lighting"
+        "prompt": "27 year old Brazilian man, tanned skin, messy beach wave hair, relaxed laid-back vibe, casual confident smile, streetwear style, urban lifestyle influencer, TikTok creator, Rio de Janeiro street background, photorealistic, 8k, natural lighting"
     },
     "pedro": {
         "nome": "Pedro Alves",
-        "prompt": "24 year old Brazilian man from Rio Grande do Sul, casual style, friendly energetic expression, tech and gaming influencer, TikTok creator, streetwear outfit, modern setup background, photorealistic, 8k, soft lighting"
+        "prompt": "29 year old German blonde man, light blonde hair, piercing blue eyes, strong muscular build, chiseled jawline, athletic European look, fitness and lifestyle influencer, TikTok creator, modern gym or outdoor background, photorealistic, 8k, dynamic lighting"
     },
     "mateus": {
         "nome": "Mateus Lima",
-        "prompt": "26 year old Brazilian man from Bahia, tanned skin, charismatic smile, lifestyle and beach influencer, TikTok creator, casual summer outfit, beach background, photorealistic, 8k, natural lighting"
+        "prompt": "26 year old Japanese man, sleek black hair, sharp seductive eyes, refined elegant features, alluring confident expression, fashion and lifestyle influencer, TikTok creator, stylish modern outfit, minimalist background, photorealistic, 8k, cinematic lighting"
     }
 }
 
@@ -263,4 +263,5 @@ def verificar_video(video_id: str, user: str = Depends(get_current_user)):
     status = data.get("data", {}).get("status", "")
     video_url = data.get("data", {}).get("video_url", "")
     return {"status": status, "video_url": video_url}
+
 
