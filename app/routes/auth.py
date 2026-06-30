@@ -219,7 +219,7 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
     else:
         response = requests.post(
             "https://api.stability.ai/v2beta/stable-image/generate/core",
-            headers={"authorization": "Bearer {os.getenv(\"STABILITY_KEY\")}", "accept": "image/*"},
+            headers={"authorization": f"Bearer {os.getenv(\"STABILITY_KEY\")}", "accept": "image/*"},
             files={"none": ""},
             data={"prompt": prompt, "aspect_ratio": "2:3", "output_format": "jpeg"}
         )
