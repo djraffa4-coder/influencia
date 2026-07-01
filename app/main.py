@@ -29,6 +29,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 from fastapi.responses import RedirectResponse
 
 @app.get("/")
+@app.head("/")
 def raiz():
     return RedirectResponse(url="/app")
 
