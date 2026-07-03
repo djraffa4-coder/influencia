@@ -219,3 +219,27 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
         print(f"[ERRO GRAVE] Falha ao processar webhook: {str(e)}")
         return {"status": "error", "message": str(e)}
 
+
+# --- ATIVACAO MANUAL DE PLANO (admin) --------------------------------------
+class AtivarPlanoRequest(BaseModel):
+    email_ou_username: str
+    plano: str
+    admin_key: str
+
+@app.post("/admin/ativar-plano")
+def ativar_plano(req: AtivarPlanoRequest, db: Session = Depends(get_db)):
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
+    if req.admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Nao autorizado")
+    db_user = db.query(DBUser).filter(
+        (DBUser.email == req.email_ou_username) |
+        (DBUser.username == req.email_ou_username)
+    ).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario nao encontrado")
+    planos_validos = ["free", "starter", "pro", "business"]
+    if req.plano not in planos_validos:
+        raise HTTPException(status_code=400, detail=f"Plano invalido")
+    db_user.plano = req.plano
+    db.commit()
+    return {"msg": f"Plano {req.plano} ativado para {db_user.username}"}
