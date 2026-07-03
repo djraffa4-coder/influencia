@@ -62,14 +62,31 @@ _migrar_banco_automaticamente()
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-SECRET_KEY = "minha-chave-super-secreta"
+# ── CORRIGIDO: SECRET_KEY agora vem de variavel de ambiente ──
+# No Render, va em Environment > Add Environment Variable:
+#   JWT_SECRET_KEY = (gere uma string aleatoria longa, ex: openssl rand -hex 32)
+# Localmente, se a variavel nao existir, usa um fallback SO PRA DEV.
+SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-fallback-troque-em-producao")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
 oauth2_scheme = HTTPBearer()
 
-# Substitua pelo seu Access Token de Producao real do Mercado Pago
+# Access Token de Producao do Mercado Pago (variavel de ambiente, ja existente)
 MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
+
+# ── NOVO: URL base da sua aplicacao no Render ──
+# Ex: APP_URL = https://influencia.onrender.com
+# Sem barra no final. Usado pros back_urls e notification_url do Mercado Pago.
+APP_URL = os.getenv("APP_URL", "http://localhost:8000")
+
+# ── NOVO: catalogo de planos (preco definido AQUI, no backend — nao confia no frontend) ──
+PLANOS_CONFIG = {
+    "kit_teste": {"title": "Kit Teste - InfluencIA", "price": 47.00, "plano_interno": "starter"},
+    "kit_pro": {"title": "Kit Criador PRO - InfluencIA", "price": 97.00, "plano_interno": "pro"},
+    "kit_agencia": {"title": "Kit Agencia - InfluencIA", "price": 197.00, "plano_interno": "business"},
+}
+
 
 class User(BaseModel):
     username: str
@@ -142,6 +159,19 @@ def login(user: LoginUser, db: Session = Depends(get_db)):
     token = create_token({"sub": db_user.username})
     return {"access_token": token, "token_type": "bearer"}
 
+# ── NOVO: endpoint que faltava — resolve o problema do e-mail nao aparecer no topo ──
+@app.get("/me")
+def me(user: str = Depends(get_current_user), db: Session = Depends(get_db)):
+    db_user = db.query(DBUser).filter(DBUser.username == user).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario nao encontrado")
+    return {
+        "id": db_user.id,
+        "username": db_user.username,
+        "email": db_user.email,
+        "plano": db_user.plano
+    }
+
 @app.get("/painel")
 def painel(user: str = Depends(get_current_user)):
     return {"msg": f"Bem vindo, {user}!"}
@@ -172,6 +202,80 @@ def get_creditos(user: str = Depends(get_current_user), db: Session = Depends(ge
 
 app.include_router(script_router)
 
+
+# ── NOVO: cria uma preferencia de pagamento DINAMICA e AUTENTICADA ──
+# Isso substitui os links estaticos (mpago.la/xxxx) do frontend.
+# Agora cada pagamento nasce ja vinculado ao user_id de quem esta logado.
+@app.post("/criar-pagamento/{plano_id}")
+def criar_pagamento(
+    plano_id: str,
+    user: str = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    if plano_id not in PLANOS_CONFIG:
+        raise HTTPException(status_code=400, detail="Plano invalido")
+
+    if not MP_ACCESS_TOKEN:
+        raise HTTPException(status_code=500, detail="MP_ACCESS_TOKEN nao configurado no servidor")
+
+    db_user = db.query(DBUser).filter(DBUser.username == user).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario nao encontrado")
+
+    plano_info = PLANOS_CONFIG[plano_id]
+
+    # external_reference carrega o user_id de forma inequivoca.
+    # Formato: user_<id>_<plano_id>  ex: user_2_kit_pro
+    external_reference = f"user_{db_user.id}_{plano_id}"
+
+    preference_payload = {
+        "items": [{
+            "title": plano_info["title"],
+            "quantity": 1,
+            "unit_price": plano_info["price"],
+            "currency_id": "BRL"
+        }],
+        "external_reference": external_reference,
+        "back_urls": {
+            "success": f"{APP_URL}/app",
+            "failure": f"{APP_URL}/app",
+            "pending": f"{APP_URL}/app"
+        },
+        "auto_return": "approved",
+        "notification_url": f"{APP_URL}/webhook"
+    }
+
+    if db_user.email:
+        preference_payload["payer"] = {"email": db_user.email}
+
+    headers = {
+        "Authorization": f"Bearer {MP_ACCESS_TOKEN}",
+        "Content-Type": "application/json"
+    }
+
+    try:
+        response = requests.post(
+            "https://api.mercadopago.com/checkout/preferences",
+            json=preference_payload,
+            headers=headers,
+            timeout=15
+        )
+    except requests.RequestException as e:
+        raise HTTPException(status_code=502, detail=f"Falha ao conectar com Mercado Pago: {str(e)}")
+
+    if response.status_code not in (200, 201):
+        print(f"[ERRO MP] {response.status_code} - {response.text}")
+        raise HTTPException(status_code=502, detail="Erro ao criar preferencia de pagamento")
+
+    data = response.json()
+    return {
+        "init_point": data.get("init_point"),
+        "preference_id": data.get("id")
+    }
+
+
+# ── CORRIGIDO: webhook agora identifica o usuario por ID (via external_reference)
+# como fonte primaria de verdade, com fallback por e-mail apenas se necessario. ──
 @app.post("/webhook")
 async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
     try:
@@ -193,21 +297,43 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
                 status = payment_data.get("status")
 
                 if status == "approved":
+                    external_ref = (payment_data.get("external_reference") or "").strip()
                     payer_email = payment_data.get("payer", {}).get("email")
 
-                    if payer_email:
-                        db_user = db.query(DBUser).filter(DBUser.email == payer_email).first()
+                    db_user = None
+                    plano_id_extraido = None
 
+                    # 1) Tentativa primaria: extrair user_id do external_reference
+                    # Formato esperado: user_<id>_<plano_id>
+                    if external_ref.startswith("user_"):
+                        partes = external_ref.split("_")
+                        if len(partes) >= 3:
+                            try:
+                                user_id = int(partes[1])
+                                plano_id_extraido = "_".join(partes[2:])
+                                db_user = db.query(DBUser).filter(DBUser.id == user_id).first()
+                            except ValueError:
+                                db_user = None
+
+                    # 2) Fallback: formato antigo (external_reference = "kit_pro" direto)
+                    #    ou nao achou por ID -> tenta por e-mail
+                    if not db_user and external_ref in PLANOS_CONFIG:
+                        plano_id_extraido = external_ref
+
+                    if not db_user and payer_email:
+                        db_user = db.query(DBUser).filter(DBUser.email == payer_email).first()
                         if db_user:
-                            external_ref = payment_data.get("external_reference", "").lower().strip()
-                            planos = {"kit_teste": "starter", "kit_pro": "pro", "kit_agencia": "business"}
-                            db_user.plano = planos.get(external_ref, "pro")
-                            db.commit()
-                            print(f"[SUCESSO] Plano PRO liberado para o e-mail: {payer_email}!")
-                        else:
-                            print(f"[AVISO] Pagamento aprovado, mas o e-mail {payer_email} nao foi encontrado no banco de dados.")
+                            print(f"[AVISO] Identificado por fallback de e-mail ({payer_email}), nao por external_reference. Verifique a integracao.")
+
+                    if db_user:
+                        plano_final = PLANOS_CONFIG.get(plano_id_extraido, {}).get("plano_interno", "pro")
+                        db_user.plano = plano_final
+                        db.commit()
+                        print(f"[SUCESSO] Plano '{plano_final}' liberado para user_id={db_user.id} (username={db_user.username})")
                     else:
-                        print("[AVISO] E-mail do comprador nao encontrado nos dados do pagamento.")
+                        print(f"[ERRO] Pagamento {payment_id} aprovado mas NAO foi possivel identificar o usuario. "
+                              f"external_reference='{external_ref}' payer_email='{payer_email}'. "
+                              f"Verificar manualmente no painel do Mercado Pago.")
                 else:
                     print(f"[AGUARDANDO] O pagamento {payment_id} esta com status: {status}")
             else:
