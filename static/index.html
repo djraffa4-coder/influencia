@@ -135,15 +135,15 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
         <img class="login-logo-img" src="/static/logo.png" onerror="this.style.display='none'">
         <div class="login-sub">Crie scripts, influencers e videos com IA</div>
         <div class="login-err" id="login-err"></div>
-        <input type="text" id="login-user" placeholder="Usuario">
-        <input type="password" id="login-pass" placeholder="Senha">
+        <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
+        <input type="password" id="login-pass" placeholder="Senha" autocomplete="new-password">
         <button class="login-btn" onclick="doLogin()">Entrar</button>
         <div class="login-link" onclick="showRegister()">Criar conta gratis</div>
         <div id="register-section" style="display:none;">
             <hr style="border-color:#2a2a4a;margin:20px 0;">
-            <input type="text" id="reg-user" placeholder="Novo usuario">
-            <input type="email" id="reg-email" placeholder="Seu e-mail">
-            <input type="password" id="reg-pass" placeholder="Nova senha">
+            <input type="text" id="reg-user" placeholder="Novo usuario" autocomplete="off">
+            <input type="email" id="reg-email" placeholder="Seu e-mail" autocomplete="off">
+            <input type="password" id="reg-pass" placeholder="Nova senha" autocomplete="new-password">
             <button class="login-btn" onclick="doRegister()">Criar conta</button>
         </div>
     </div>
@@ -244,20 +244,20 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                         <h3 style="color:#a78bfa;">Kit Teste</h3>
                         <div class="price">R$ 47</div>
                         <p style="font-size:14px; margin-bottom: 20px;">50 Scripts + 20 Imagens</p>
-                        <button class="btn-assinar" onclick="window.open('https://mpago.la/1tqcfBb','_blank')">ASSINAR AGORA</button>
+                        <button class="btn-assinar" onclick="assinarPlano('kit_teste')">ASSINAR AGORA</button>
                     </div>
                     <div class="price-card featured">
                         <div class="featured-badge">MAIS VENDIDO</div>
                         <h3 style="color:#ec4899;">Kit Criador PRO</h3>
                         <div class="price">R$ 97</div>
                         <p style="font-size:14px; margin-bottom: 20px;">150 Scripts + 100 Imagens + VIP</p>
-                        <button class="btn-assinar" onclick="window.open('https://mpago.la/2q4sz9E','_blank')">RECOMENDADO</button>
+                        <button class="btn-assinar" onclick="assinarPlano('kit_pro')">RECOMENDADO</button>
                     </div>
                     <div class="price-card">
                         <h3 style="color:#fff;">Kit Agência</h3>
                         <div class="price">R$ 197</div>
                         <p style="font-size:14px; margin-bottom: 20px;">Ilimitado + Suporte 24h</p>
-                        <button class="btn-assinar" onclick="window.open('https://mpago.la/1i7fnYj','_blank')">ASSINAR AGORA</button>
+                        <button class="btn-assinar" onclick="assinarPlano('kit_agencia')">ASSINAR AGORA</button>
                     </div>
                 </div>
 
@@ -868,7 +868,7 @@ function fecharImagemModal() {
 
 // SCRIPTS PRINCIPAIS DO SISTEMA
 const API = "";
-var token = "";
+var token = sessionStorage.getItem("influencia_token") || "";
 var perfilAtual = "rafaela";
 var currentTalkId = "";
 var uploadedImageB64 = "";
@@ -877,12 +877,13 @@ var planoAtual = "free";
 
 function showLogin(){document.getElementById("app-screen").style.display="none";document.getElementById("login-screen").style.display="flex";}
 
-// --- ALTERADO PARA ABRIR A DASHBOARD PRIMEIRO ---
-function showApp(username){
+function showApp(username, email){
     document.getElementById("login-screen").style.display="none";
     document.getElementById("app-screen").style.display="flex";
     document.getElementById("user-name-top").textContent=username;
     document.getElementById("user-avatar").textContent=username[0].toUpperCase();
+    var emailEl=document.getElementById("user-email-top");
+    if(emailEl)emailEl.textContent=email||username;
     carregarCreditos();
     showPage('dashboard', document.getElementById('menu-dashboard')); 
 }
@@ -896,7 +897,13 @@ async function doLogin(){
     try{
         var r=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
         var d=await r.json();
-        if(d.access_token){token=d.access_token;showApp(u);}
+        if(d.access_token){
+            token=d.access_token;
+            sessionStorage.setItem("influencia_token", token);
+            var r2=await fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}});
+            var d2=await r2.json();
+            showApp(d2.username, d2.email);
+        }
         else{err.textContent=d.detail||"Erro ao entrar.";err.style.display="block";}
     }catch(e){err.textContent="Erro ao conectar.";err.style.display="block";}
 }
@@ -910,7 +917,31 @@ async function doRegister(){
     if(d.msg){alert("Conta criada! Faca login.");}
     else{alert(typeof d.detail==="string"?d.detail:"Erro ao criar conta.");}
 }
-function doLogout(){token="";currentTalkId="";showLogin();}
+function doLogout(){
+    token="";
+    currentTalkId="";
+    sessionStorage.removeItem("influencia_token");
+    showLogin();
+}
+async function assinarPlano(planoId){
+    if(!token){
+        alert("Faca login primeiro!");
+        return;
+    }
+    try{
+        var r=await fetch(API+"/criar-pagamento/"+planoId,{method:"POST",headers:{"Authorization":"Bearer "+token}});
+        var d=await r.json();
+        if(d.init_point){
+            window.open(d.init_point,"_blank");
+        }else if(d.detail){
+            alert("Erro: "+d.detail);
+        }else{
+            alert("Erro ao criar pagamento. Tente novamente.");
+        }
+    }catch(e){
+        alert("Erro ao conectar: "+e.message);
+    }
+}
 function showPage(page,el){
     document.querySelectorAll(".page").forEach(function(p){p.classList.remove("active");});
     document.querySelectorAll(".sidebar-item").forEach(function(i){i.classList.remove("active");});
@@ -1178,7 +1209,7 @@ setTimeout(() => {
           <li style="padding:4px 0;">&#10003; 5 Influencer Pro</li>
           <li style="padding:4px 0;">&#10003; Suporte basico</li>
         </ul>
-        <button onclick="window.open('https://mpago.la/1tqcfBb','_blank')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">ASSINAR AGORA</button>
+        <button onclick="assinarPlano('kit_teste')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">ASSINAR AGORA</button>
       </div>
       <div style="flex:1;min-width:220px;background:rgba(30,30,45,0.6);border:2px solid #ec4899;border-radius:20px;padding:28px;text-align:center;position:relative;">
         <div style="position:absolute;top:-12px;left:50%;transform:translateX(-50%);background:#ec4899;color:#fff;font-size:11px;font-weight:700;padding:4px 16px;border-radius:20px;letter-spacing:1px;">MAIS VENDIDO</div>
@@ -1193,7 +1224,7 @@ setTimeout(() => {
           <li style="padding:4px 0;">&#10003; Acervo VIP</li>
           <li style="padding:4px 0;">&#10003; Suporte prioritario</li>
         </ul>
-        <button onclick="window.open('https://mpago.la/2q4sz9E','_blank')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">RECOMENDADO</button>
+        <button onclick="assinarPlano('kit_pro')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">RECOMENDADO</button>
       </div>
       <div style="flex:1;min-width:220px;background:rgba(30,30,45,0.6);border:1px solid rgba(255,255,255,0.05);border-radius:20px;padding:28px;text-align:center;">
         <h3 style="color:#fff;margin-bottom:8px;">Kit Agencia</h3>
@@ -1207,7 +1238,7 @@ setTimeout(() => {
           <li style="padding:4px 0;">&#10003; Suporte 24h</li>
           <li style="padding:4px 0;">&#10003; Multi-usuario</li>
         </ul>
-        <button onclick="window.open('https://mpago.la/1i7fnYj','_blank')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">ASSINAR AGORA</button>
+        <button onclick="assinarPlano('kit_agencia')" style="width:100%;padding:12px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-weight:700;cursor:pointer;font-size:14px;">ASSINAR AGORA</button>
       </div>
     </div>
     <p style="text-align:center;color:#555;font-size:12px;margin-top:24px;">Apos o pagamento, seu plano e ativado automaticamente pelo e-mail cadastrado.</p>
@@ -1228,28 +1259,43 @@ document.addEventListener("keydown",function(e){
     if(e.key==="Escape") fecharModalPlanos();
 });
 
-// ── Mostra nome real do usuario (nao email) ─────────────────
+// ── Mostra nome e email do usuario no topo ─────────────────
 var _showAppOrig = typeof showApp === "function" ? showApp : null;
-function showApp(username){
+function showApp(username, email){
     document.getElementById("login-screen").style.display="none";
     document.getElementById("app-screen").style.display="flex";
-    // Exibe apenas a parte antes do @ se for email
-    var nomeExibido = username.includes("@") ? username.split("@")[0] : username;
-    nomeExibido = nomeExibido.charAt(0).toUpperCase() + nomeExibido.slice(1);
+    var nomeExibido = username.charAt(0).toUpperCase() + username.slice(1);
     document.getElementById("user-name-top").textContent = nomeExibido;
     document.getElementById("user-avatar").textContent = nomeExibido[0].toUpperCase();
     var emailEl = document.getElementById("user-email-top");
-    if(emailEl) emailEl.textContent = username;
+    if(emailEl) emailEl.textContent = email || username;
     carregarCreditos();
     showPage("dashboard", document.getElementById("menu-dashboard"));
 }
 
 // ── Botoes Assinar na dashboard tambem abrem o modal ────────
 document.addEventListener("DOMContentLoaded", function(){
+    // Auto-login se token salvo na sessao
+    if(token){
+        fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}})
+        .then(function(r){return r.json()})
+        .then(function(d){
+            if(d.username){
+                showApp(d.username, d.email);
+            }else{
+                sessionStorage.removeItem("influencia_token");
+                token="";
+            }
+        })
+        .catch(function(){
+            sessionStorage.removeItem("influencia_token");
+            token="";
+        });
+    }
     // Botoes .btn-assinar que nao tem onclick definido
     document.querySelectorAll(".btn-assinar").forEach(function(btn){
         if(!btn.getAttribute("onclick")){
-            btn.addEventListener("click", abrirModalPlanos);
+            btn.addEventListener("click", function(){assinarPlano('kit_teste');});
         }
     });
     // Botao upgrade-btn na sidebar
