@@ -66,7 +66,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # No Render, va em Environment > Add Environment Variable:
 #   JWT_SECRET_KEY = (gere uma string aleatoria longa, ex: openssl rand -hex 32)
 # Localmente, se a variavel nao existir, usa um fallback SO PRA DEV.
-SECRET_KEY = os.getenv("JWT_SECRET_KEY", "dev-fallback-troque-em-producao")
+SECRET_KEY = os.getenv("SECRET_KEY", "influencia-chave-super-secreta-2024")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 
