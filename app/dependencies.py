@@ -3,6 +3,7 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import jwt, JWTError
 from fastapi import Depends
 
+import os
 SECRET_KEY = os.getenv("SECRET_KEY", "influencia-chave-super-secreta-2024")
 ALGORITHM = "HS256"
 
