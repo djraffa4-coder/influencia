@@ -68,7 +68,7 @@ pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 # Localmente, se a variavel nao existir, usa um fallback SO PRA DEV.
 SECRET_KEY = os.getenv("SECRET_KEY", "influencia-chave-super-secreta-2024")
 ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60
+ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias
 
 oauth2_scheme = HTTPBearer()
 
