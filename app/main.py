@@ -369,3 +369,11 @@ def ativar_plano(req: AtivarPlanoRequest, db: Session = Depends(get_db)):
     db_user.plano = req.plano
     db.commit()
     return {"msg": f"Plano {req.plano} ativado para {db_user.username}"}
+
+@app.get("/admin/listar-usuarios")
+def listar_usuarios(admin_key: str, db: Session = Depends(get_db)):
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Nao autorizado")
+    users = db.query(DBUser).all()
+    return [{"id": u.id, "username": u.username, "email": u.email, "plano": u.plano} for u in users]
