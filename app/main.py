@@ -224,9 +224,13 @@ def criar_pagamento(
 
     plano_info = PLANOS_CONFIG[plano_id]
 
-    # external_reference carrega o user_id de forma inequivoca.
-    # Formato: user_<id>_<plano_id>  ex: user_2_kit_pro
-    external_reference = f"user_{db_user.id}_{plano_id}"
+    # external_reference usa EMAIL (estavel entre reinicios do DB efemero).
+    # Formato: {email}#{plano_id}  ex: djraffa4@gmail.com#kit_pro
+    # Fallback: user_{id}_{plano_id} se email for null (contas antigas).
+    if db_user.email:
+        external_reference = f"{db_user.email}#{plano_id}"
+    else:
+        external_reference = f"user_{db_user.id}_{plano_id}"
 
     preference_payload = {
         "items": [{
@@ -303,27 +307,33 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
                     db_user = None
                     plano_id_extraido = None
 
-                    # 1) Tentativa primaria: extrair user_id do external_reference
-                    # Formato esperado: user_<id>_<plano_id>
-                    if external_ref.startswith("user_"):
+                    # 1) Novo formato: {email}#{plano_id} (estavel entre reinicios)
+                    if "#" in external_ref and "@" in external_ref:
+                        email_ref, _, plano_id_extraido = external_ref.partition("#")
+                        db_user = db.query(DBUser).filter(DBUser.email == email_ref).first()
+
+                    # 2) Formato user_id: user_{id}_{plano_id} (legado, instavel)
+                    if not db_user and external_ref.startswith("user_"):
                         partes = external_ref.split("_")
                         if len(partes) >= 3:
                             try:
                                 user_id = int(partes[1])
                                 plano_id_extraido = "_".join(partes[2:])
                                 db_user = db.query(DBUser).filter(DBUser.id == user_id).first()
+                                if db_user:
+                                    print(f"[AVISO] Webhook usou user_id legado ({external_ref}). Considere recriar o pagamento.")
                             except ValueError:
                                 db_user = None
 
-                    # 2) Fallback: formato antigo (external_reference = "kit_pro" direto)
-                    #    ou nao achou por ID -> tenta por e-mail
+                    # 3) Formato antigo: external_reference = "kit_pro" direto
                     if not db_user and external_ref in PLANOS_CONFIG:
                         plano_id_extraido = external_ref
 
+                    # 4) Fallback: buscar por e-mail do pagador no MP
                     if not db_user and payer_email:
                         db_user = db.query(DBUser).filter(DBUser.email == payer_email).first()
                         if db_user:
-                            print(f"[AVISO] Identificado por fallback de e-mail ({payer_email}), nao por external_reference. Verifique a integracao.")
+                            print(f"[AVISO] Identificado por fallback de e-mail ({payer_email}), nao por external_reference.")
 
                     if db_user:
                         plano_final = PLANOS_CONFIG.get(plano_id_extraido, {}).get("plano_interno", "pro")
@@ -369,6 +379,28 @@ def ativar_plano(req: AtivarPlanoRequest, db: Session = Depends(get_db)):
     db_user.plano = req.plano
     db.commit()
     return {"msg": f"Plano {req.plano} ativado para {db_user.username}"}
+
+
+# --- ATUALIZAR EMAIL (admin) ------------------------------------------------
+class AtualizarEmailRequest(BaseModel):
+    username: str
+    email: str
+    admin_key: str
+
+@app.post("/admin/atualizar-email")
+def atualizar_email(req: AtualizarEmailRequest, db: Session = Depends(get_db)):
+    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
+    if req.admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Nao autorizado")
+    db_user = db.query(DBUser).filter(DBUser.username == req.username).first()
+    if not db_user:
+        raise HTTPException(status_code=404, detail="Usuario nao encontrado")
+    existing = db.query(DBUser).filter(DBUser.email == req.email).first()
+    if existing:
+        raise HTTPException(status_code=400, detail="Email ja cadastrado")
+    db_user.email = req.email
+    db.commit()
+    return {"msg": f"Email atualizado para {req.email} no usuario {req.username}"}
 
 @app.get("/admin/listar-usuarios")
 def listar_usuarios(admin_key: str, db: Session = Depends(get_db)):
