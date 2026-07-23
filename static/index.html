@@ -1003,6 +1003,8 @@ async function carregarCreditos(){
         planoAtual=d.plano;
         var plano=d.plano.charAt(0).toUpperCase()+d.plano.slice(1);
         document.getElementById("credits-label").textContent="Plano "+plano;
+        var elPerfilPlano=document.getElementById("perfil-plano-big");
+        if(elPerfilPlano)elPerfilPlano.textContent="Plano "+plano;
         var sr=d.scripts.limite-d.scripts.usados;
         var ir=d.imagens.limite-d.imagens.usados;
         var ipr=d.imagens_pro.limite-d.imagens_pro.usados;
