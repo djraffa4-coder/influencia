@@ -10,4 +10,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping site
-        run: curl -sS -o /dev/null -w "Status: %{http_code}\n" https://influencia-1hsp.onrender.com/app
+        run: |
+          curl -sS -o /dev/null -w "Status: %{http_code}\n" https://influencia-1hsp.onrender.com/app
