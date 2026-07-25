@@ -138,13 +138,36 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
         <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
         <input type="password" id="login-pass" placeholder="Senha" autocomplete="new-password">
         <button class="login-btn" onclick="doLogin()">Entrar</button>
-        <div class="login-link" onclick="showRegister()">Criar conta gratis</div>
+        <div style="display:flex;justify-content:space-between;margin-top:10px;">
+            <div class="login-link" style="margin-top:0;" onclick="showRegister()">Criar conta gratis</div>
+            <div class="login-link" style="margin-top:0;" onclick="mostrarEsqueciSenha()">Esqueci minha senha</div>
+        </div>
+        <div id="google-signin-area" style="margin-top:16px;display:none;">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
+                <hr style="flex:1;border-color:#2a2a4a;"><span style="color:#666;font-size:12px;">ou</span><hr style="flex:1;border-color:#2a2a4a;">
+            </div>
+            <div id="google-signin-btn" style="display:flex;justify-content:center;"></div>
+        </div>
         <div id="register-section" style="display:none;">
             <hr style="border-color:#2a2a4a;margin:20px 0;">
             <input type="text" id="reg-user" placeholder="Novo usuario" autocomplete="off">
             <input type="email" id="reg-email" placeholder="Seu e-mail" autocomplete="off">
             <input type="password" id="reg-pass" placeholder="Nova senha" autocomplete="new-password">
             <button class="login-btn" onclick="doRegister()">Criar conta</button>
+        </div>
+        <div id="esqueci-senha-section" style="display:none;">
+            <hr style="border-color:#2a2a4a;margin:20px 0;">
+            <div style="color:#aaa;font-size:13px;margin-bottom:10px;">Digite seu e-mail cadastrado para receber o link de redefinicao.</div>
+            <input type="email" id="esqueci-email" placeholder="Seu e-mail" autocomplete="off">
+            <button class="login-btn" onclick="enviarEsqueciSenha()">Enviar link</button>
+            <div class="login-link" onclick="ocultarEsqueciSenha()">Voltar ao login</div>
+        </div>
+        <div id="redefinir-senha-section" style="display:none;">
+            <hr style="border-color:#2a2a4a;margin:20px 0;">
+            <div style="color:#aaa;font-size:13px;margin-bottom:10px;">Digite sua nova senha.</div>
+            <input type="password" id="nova-senha-1" placeholder="Nova senha" autocomplete="new-password">
+            <input type="password" id="nova-senha-2" placeholder="Confirme a nova senha" autocomplete="new-password">
+            <button class="login-btn" onclick="confirmarRedefinicao()">Redefinir senha</button>
         </div>
     </div>
 </div>
@@ -889,6 +912,76 @@ function showApp(username, email){
 }
 
 function showRegister(){document.getElementById("register-section").style.display="block";}
+
+function mostrarEsqueciSenha(){
+    document.getElementById("esqueci-senha-section").style.display="block";
+    document.getElementById("register-section").style.display="none";
+}
+function ocultarEsqueciSenha(){
+    document.getElementById("esqueci-senha-section").style.display="none";
+}
+async function enviarEsqueciSenha(){
+    var email=document.getElementById("esqueci-email").value.trim();
+    if(!email||!email.includes("@")){alert("Digite um e-mail valido!");return;}
+    try{
+        var r=await fetch(API+"/esqueci-senha",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})});
+        var d=await r.json();
+        alert(d.msg||"Se o e-mail existir, um link foi enviado.");
+        ocultarEsqueciSenha();
+    }catch(e){alert("Erro ao conectar. Tente novamente.");}
+}
+async function confirmarRedefinicao(){
+    var p1=document.getElementById("nova-senha-1").value;
+    var p2=document.getElementById("nova-senha-2").value;
+    if(!p1||p1.length<4){alert("A senha deve ter pelo menos 4 caracteres!");return;}
+    if(p1!==p2){alert("As senhas nao coincidem!");return;}
+    var resetToken=window._resetToken;
+    try{
+        var r=await fetch(API+"/redefinir-senha",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({token:resetToken,nova_senha:p1})});
+        var d=await r.json();
+        if(d.msg){
+            alert("Senha redefinida com sucesso! Faca login com a nova senha.");
+            window.history.replaceState({},document.title,"/app");
+            document.getElementById("redefinir-senha-section").style.display="none";
+        }else{
+            alert(d.detail||"Erro ao redefinir senha. O link pode ter expirado.");
+        }
+    }catch(e){alert("Erro ao conectar. Tente novamente.");}
+}
+
+async function handleGoogleSignIn(response){
+    try{
+        var r=await fetch(API+"/login-google",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({credential:response.credential})});
+        var d=await r.json();
+        if(d.access_token){
+            token=d.access_token;
+            sessionStorage.setItem("influencia_token", token);
+            var r2=await fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}});
+            var d2=await r2.json();
+            showApp(d2.username, d2.email);
+        }else{
+            alert(d.detail||"Erro ao entrar com Google.");
+        }
+    }catch(e){alert("Erro ao conectar com Google.");}
+}
+
+async function initGoogleSignIn(){
+    try{
+        var r=await fetch(API+"/config-publica");
+        var d=await r.json();
+        if(!d.google_client_id)return;
+        var script=document.createElement("script");
+        script.src="https://accounts.google.com/gsi/client";
+        script.async=true;
+        script.onload=function(){
+            google.accounts.id.initialize({client_id:d.google_client_id,callback:handleGoogleSignIn});
+            google.accounts.id.renderButton(document.getElementById("google-signin-btn"),{theme:"filled_black",size:"large",width:280});
+            document.getElementById("google-signin-area").style.display="block";
+        };
+        document.head.appendChild(script);
+    }catch(e){console.log("Google Sign-In indisponivel:",e);}
+}
+
 async function doLogin(){
     var u=document.getElementById("login-user").value.trim();
     var p=document.getElementById("login-pass").value.trim();
@@ -1277,6 +1370,17 @@ function showApp(username, email){
 
 // ── Botoes Assinar na dashboard tambem abrem o modal ────────
 document.addEventListener("DOMContentLoaded", function(){
+    // Verificar se veio de um link de redefinicao de senha (?reset_token=xxx)
+    var urlParams = new URLSearchParams(window.location.search);
+    var resetToken = urlParams.get("reset_token");
+    if(resetToken){
+        window._resetToken = resetToken;
+        document.getElementById("register-section").style.display="none";
+        document.getElementById("esqueci-senha-section").style.display="none";
+        document.getElementById("redefinir-senha-section").style.display="block";
+    }
+    // Iniciar botao de login com Google (se configurado no servidor)
+    initGoogleSignIn();
     // Auto-login se token salvo na sessao
     if(token){
         fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}})
