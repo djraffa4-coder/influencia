@@ -4,7 +4,10 @@ from jose import jwt, JWTError
 from fastapi import Depends
 
 import os
-SECRET_KEY = os.getenv("SECRET_KEY", "influencia-chave-super-secreta-2024")
+# SECRET_KEY OBRIGATORIA via env var - repo publico, nunca usar fallback fixo aqui.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY nao configurada! Configure a variavel de ambiente no Render.")
 ALGORITHM = "HS256"
 
 oauth2_scheme = HTTPBearer()

@@ -47,11 +47,12 @@ Base.metadata.create_all(bind=engine)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
-# ── CORRIGIDO: SECRET_KEY agora vem de variavel de ambiente ──
-# No Render, va em Environment > Add Environment Variable:
-#   JWT_SECRET_KEY = (gere uma string aleatoria longa, ex: openssl rand -hex 32)
-# Localmente, se a variavel nao existir, usa um fallback SO PRA DEV.
-SECRET_KEY = os.getenv("SECRET_KEY", "influencia-chave-super-secreta-2024")
+# ── SECRET_KEY: OBRIGATORIA via variavel de ambiente. ──
+# Como este repositorio e PUBLICO, jamais use um valor padrao aqui no codigo -
+# qualquer fallback fixo seria visivel a qualquer pessoa e permitiria forjar tokens.
+SECRET_KEY = os.getenv("SECRET_KEY")
+if not SECRET_KEY:
+    raise RuntimeError("SECRET_KEY nao configurada! Configure a variavel de ambiente no Render.")
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24 * 7  # 7 dias
 
@@ -72,6 +73,11 @@ BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "djraffa4@gmail.com")
 
 # ── NOVO: Google OAuth (login com Google) ──
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
+
+# ── ADMIN_KEY: OBRIGATORIA via env var - repo publico, sem fallback fixo. ──
+ADMIN_KEY = os.getenv("ADMIN_KEY")
+if not ADMIN_KEY:
+    raise RuntimeError("ADMIN_KEY nao configurada! Configure a variavel de ambiente no Render.")
 
 # ── NOVO: catalogo de planos (preco definido AQUI, no backend — nao confia no frontend) ──
 PLANOS_CONFIG = {
@@ -477,7 +483,6 @@ class AtivarPlanoRequest(BaseModel):
 
 @app.post("/admin/ativar-plano")
 def ativar_plano(req: AtivarPlanoRequest, db: Session = Depends(get_db)):
-    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
     if req.admin_key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Nao autorizado")
     db_user = db.query(DBUser).filter(
@@ -502,7 +507,6 @@ class AtualizarEmailRequest(BaseModel):
 
 @app.post("/admin/atualizar-email")
 def atualizar_email(req: AtualizarEmailRequest, db: Session = Depends(get_db)):
-    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
     if req.admin_key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Nao autorizado")
     db_user = db.query(DBUser).filter(DBUser.username == req.username).first()
@@ -517,7 +521,6 @@ def atualizar_email(req: AtualizarEmailRequest, db: Session = Depends(get_db)):
 
 @app.get("/admin/listar-usuarios")
 def listar_usuarios(admin_key: str, db: Session = Depends(get_db)):
-    ADMIN_KEY = os.getenv("ADMIN_KEY", "influencia-admin-2024")
     if admin_key != ADMIN_KEY:
         raise HTTPException(status_code=403, detail="Nao autorizado")
     users = db.query(DBUser).all()
