@@ -34,6 +34,7 @@ def raiz():
     return RedirectResponse(url="/app")
 
 @app.get("/app")
+@app.head("/app")
 def frontend():
     return FileResponse("static/index.html")
 
