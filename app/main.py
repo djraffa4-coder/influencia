@@ -64,9 +64,10 @@ MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
 # Sem barra no final. Usado pros back_urls e notification_url do Mercado Pago.
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
 
-# ── NOVO: Gmail SMTP para envio de emails (redefinicao de senha) ──
-GMAIL_USER = os.getenv("GMAIL_USER", "")
-GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
+# ── NOVO: Brevo (API HTTP) para envio de emails (redefinicao de senha) ──
+# SMTP e bloqueado no Render free tier, por isso usamos API HTTP em vez de smtplib.
+BREVO_API_KEY = os.getenv("BREVO_API_KEY", "")
+BREVO_SENDER_EMAIL = os.getenv("BREVO_SENDER_EMAIL", "djraffa4@gmail.com")
 
 # ── NOVO: Google OAuth (login com Google) ──
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
@@ -169,15 +170,11 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
     )
     reset_link = f"{APP_URL}/app?reset_token={reset_token}"
 
-    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
-        print(f"[AVISO] GMAIL_USER/GMAIL_APP_PASSWORD nao configurados. Link de reset (debug): {reset_link}")
+    if not BREVO_API_KEY:
+        print(f"[AVISO] BREVO_API_KEY nao configurada. Link de reset (debug): {reset_link}")
         return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
 
     try:
-        import smtplib
-        from email.mime.text import MIMEText
-        from email.mime.multipart import MIMEMultipart
-
         corpo_html = f"""
             <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
                 <h2 style="color:#a78bfa;">InfluencIA</h2>
@@ -186,18 +183,21 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
                 <p style="color:#888;font-size:12px;">Este link expira em 30 minutos. Se voce nao solicitou isso, ignore este email.</p>
             </div>
         """
-        msg = MIMEMultipart("alternative")
-        msg["Subject"] = "Redefinir senha - InfluencIA"
-        msg["From"] = GMAIL_USER
-        msg["To"] = db_user.email
-        msg.attach(MIMEText(corpo_html, "html"))
-
-        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
-            server.starttls()
-            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
-            server.sendmail(GMAIL_USER, db_user.email, msg.as_string())
+        resp = requests.post(
+            "https://api.brevo.com/v3/smtp/email",
+            headers={"api-key": BREVO_API_KEY, "Content-Type": "application/json", "accept": "application/json"},
+            json={
+                "sender": {"name": "InfluencIA", "email": BREVO_SENDER_EMAIL},
+                "to": [{"email": db_user.email}],
+                "subject": "Redefinir senha - InfluencIA",
+                "htmlContent": corpo_html
+            },
+            timeout=15
+        )
+        if resp.status_code not in (200, 201):
+            print(f"[ERRO] Brevo respondeu {resp.status_code}: {resp.text}")
     except Exception as e:
-        print(f"[ERRO] Falha ao enviar email via Gmail: {e}")
+        print(f"[ERRO] Falha ao enviar email via Brevo: {e}")
 
     return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
 
