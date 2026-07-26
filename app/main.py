@@ -192,7 +192,7 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
         msg["To"] = db_user.email
         msg.attach(MIMEText(corpo_html, "html"))
 
-        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+        with smtplib.SMTP("smtp.gmail.com", 587, timeout=10) as server:
             server.starttls()
             server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
             server.sendmail(GMAIL_USER, db_user.email, msg.as_string())
