@@ -64,9 +64,9 @@ MP_ACCESS_TOKEN = os.getenv("MP_ACCESS_TOKEN")
 # Sem barra no final. Usado pros back_urls e notification_url do Mercado Pago.
 APP_URL = os.getenv("APP_URL", "http://localhost:8000")
 
-# ── NOVO: Resend para envio de emails (redefinicao de senha) ──
-RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-EMAIL_REMETENTE = os.getenv("EMAIL_REMETENTE", "onboarding@resend.dev")
+# ── NOVO: Gmail SMTP para envio de emails (redefinicao de senha) ──
+GMAIL_USER = os.getenv("GMAIL_USER", "")
+GMAIL_APP_PASSWORD = os.getenv("GMAIL_APP_PASSWORD", "")
 
 # ── NOVO: Google OAuth (login com Google) ──
 GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID", "")
@@ -169,28 +169,35 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
     )
     reset_link = f"{APP_URL}/app?reset_token={reset_token}"
 
-    if not RESEND_API_KEY:
-        print(f"[AVISO] RESEND_API_KEY nao configurada. Link de reset (debug): {reset_link}")
+    if not GMAIL_USER or not GMAIL_APP_PASSWORD:
+        print(f"[AVISO] GMAIL_USER/GMAIL_APP_PASSWORD nao configurados. Link de reset (debug): {reset_link}")
         return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
 
     try:
-        import resend
-        resend.api_key = RESEND_API_KEY
-        resend.Emails.send({
-            "from": EMAIL_REMETENTE,
-            "to": db_user.email,
-            "subject": "Redefinir senha - InfluencIA",
-            "html": f"""
-                <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
-                    <h2 style="color:#a78bfa;">InfluencIA</h2>
-                    <p>Voce solicitou a redefinicao da sua senha.</p>
-                    <p><a href="{reset_link}" style="background:#ec4899;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">Redefinir senha</a></p>
-                    <p style="color:#888;font-size:12px;">Este link expira em 30 minutos. Se voce nao solicitou isso, ignore este email.</p>
-                </div>
-            """
-        })
+        import smtplib
+        from email.mime.text import MIMEText
+        from email.mime.multipart import MIMEMultipart
+
+        corpo_html = f"""
+            <div style="font-family:sans-serif;max-width:480px;margin:0 auto;">
+                <h2 style="color:#a78bfa;">InfluencIA</h2>
+                <p>Voce solicitou a redefinicao da sua senha.</p>
+                <p><a href="{reset_link}" style="background:#ec4899;color:#fff;padding:12px 24px;border-radius:8px;text-decoration:none;display:inline-block;">Redefinir senha</a></p>
+                <p style="color:#888;font-size:12px;">Este link expira em 30 minutos. Se voce nao solicitou isso, ignore este email.</p>
+            </div>
+        """
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = "Redefinir senha - InfluencIA"
+        msg["From"] = GMAIL_USER
+        msg["To"] = db_user.email
+        msg.attach(MIMEText(corpo_html, "html"))
+
+        with smtplib.SMTP("smtp.gmail.com", 587) as server:
+            server.starttls()
+            server.login(GMAIL_USER, GMAIL_APP_PASSWORD)
+            server.sendmail(GMAIL_USER, db_user.email, msg.as_string())
     except Exception as e:
-        print(f"[ERRO] Falha ao enviar email via Resend: {e}")
+        print(f"[ERRO] Falha ao enviar email via Gmail: {e}")
 
     return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
 
