@@ -169,6 +169,11 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
             <input type="password" id="nova-senha-2" placeholder="Confirme a nova senha" autocomplete="new-password">
             <button class="login-btn" onclick="confirmarRedefinicao()">Redefinir senha</button>
         </div>
+        <div style="text-align:center;margin-top:20px;font-size:11px;color:#555;">
+            <a href="/termos" target="_blank" style="color:#777;text-decoration:none;">Termos de Uso</a>
+            &nbsp;&middot;&nbsp;
+            <a href="/privacidade" target="_blank" style="color:#777;text-decoration:none;">Política de Privacidade</a>
+        </div>
     </div>
 </div>
 
@@ -967,8 +972,7 @@ async function handleGoogleSignIn(response){
 
 async function initGoogleSignIn(){
     try{
-        var r=await fetch(API+"/config-publica");
-        var d=await r.json();
+        var d=await getConfigPublica();
         if(!d.google_client_id)return;
         var script=document.createElement("script");
         script.src="https://accounts.google.com/gsi/client";
@@ -980,6 +984,34 @@ async function initGoogleSignIn(){
         };
         document.head.appendChild(script);
     }catch(e){console.log("Google Sign-In indisponivel:",e);}
+}
+
+var _configPublicaCache=null;
+async function getConfigPublica(){
+    if(_configPublicaCache)return _configPublicaCache;
+    var r=await fetch(API+"/config-publica");
+    _configPublicaCache=await r.json();
+    return _configPublicaCache;
+}
+
+async function initPixels(){
+    try{
+        var d=await getConfigPublica();
+        if(d.meta_pixel_id){
+            !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+            n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+            n.push=n;n.loaded=!0;n.version="2.0";n.queue=[];t=b.createElement(e);t.async=!0;
+            t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+            document,"script","https://connect.facebook.net/en_US/fbevents.js");
+            fbq("init", d.meta_pixel_id);
+            fbq("track", "PageView");
+        }
+        if(d.tiktok_pixel_id){
+            !function(w,d2,t){w.TiktokAnalyticsObject=t;var ttq=w[t]=w[t]||[];ttq.methods=["page","track","identify","instances","debug","on","off","once","ready","alias","group","enableCookie","disableCookie","holdConsent","revokeConsent","grantConsent"],ttq.setAndDefer=function(e,n){e[n]=function(){e.push([n].concat(Array.prototype.slice.call(arguments,0)))}};for(var i=0;i<ttq.methods.length;i++)ttq.setAndDefer(ttq,ttq.methods[i]);ttq.instance=function(e){for(var n=ttq._i[e]||[],i=0;i<ttq.methods.length;i++)ttq.setAndDefer(n,ttq.methods[i]);return n},ttq.load=function(e,n){var r="https://analytics.tiktok.com/i18n/pixel/events.js",o=n&&n.partner;ttq._i=ttq._i||{},ttq._i[e]=[],ttq._i[e]._u=r,ttq._t=ttq._t||{},ttq._t[e]=+new Date,ttq._o=ttq._o||{},ttq._o[e]=n||{};var s=d2.createElement("script");s.type="text/javascript",s.async=!0,s.src=r+"?sdkid="+e+"&lib="+t;var a=d2.getElementsByTagName("script")[0];a.parentNode.insertBefore(s,a)};
+            ttq.load(d.tiktok_pixel_id);
+            ttq.page();
+        }
+    }catch(e){console.log("Pixels indisponiveis:",e);}
 }
 
 async function doLogin(){
@@ -1007,7 +1039,11 @@ async function doRegister(){
     if(!e || !e.includes("@")){alert("Digite um e-mail valido!");return;}
     var r=await fetch(API+"/register",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,email:e,password:p})});
     var d=await r.json();
-    if(d.msg){alert("Conta criada! Faca login.");}
+    if(d.msg){
+        alert("Conta criada! Faca login.");
+        if(window.fbq)fbq("track","CompleteRegistration");
+        if(window.ttq)ttq.track("CompleteRegistration");
+    }
     else{alert(typeof d.detail==="string"?d.detail:"Erro ao criar conta.");}
 }
 function doLogout(){
@@ -1025,6 +1061,8 @@ async function assinarPlano(planoId){
         var r=await fetch(API+"/criar-pagamento/"+planoId,{method:"POST",headers:{"Authorization":"Bearer "+token}});
         var d=await r.json();
         if(d.init_point){
+            if(window.fbq)fbq("track","InitiateCheckout");
+            if(window.ttq)ttq.track("InitiateCheckout");
             window.open(d.init_point,"_blank");
         }else if(d.detail){
             alert("Erro: "+d.detail);
@@ -1381,6 +1419,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     // Iniciar botao de login com Google (se configurado no servidor)
     initGoogleSignIn();
+    // Iniciar pixels de rastreamento de anuncios (Meta e TikTok, se configurados)
+    initPixels();
     // Auto-login se token salvo na sessao
     if(token){
         fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}})

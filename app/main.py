@@ -40,7 +40,19 @@ def frontend():
 
 @app.get("/config-publica")
 def config_publica():
-    return {"google_client_id": os.getenv("GOOGLE_CLIENT_ID", "")}
+    return {
+        "google_client_id": os.getenv("GOOGLE_CLIENT_ID", ""),
+        "meta_pixel_id": os.getenv("META_PIXEL_ID", ""),
+        "tiktok_pixel_id": os.getenv("TIKTOK_PIXEL_ID", "")
+    }
+
+@app.get("/privacidade")
+def privacidade():
+    return FileResponse("static/privacidade.html")
+
+@app.get("/termos")
+def termos():
+    return FileResponse("static/termos.html")
 
 Base.metadata.create_all(bind=engine)
 
