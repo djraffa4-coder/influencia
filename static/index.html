@@ -136,7 +136,10 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
         <div class="login-sub">Crie scripts, influencers e videos com IA</div>
         <div class="login-err" id="login-err"></div>
         <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
-        <input type="password" id="login-pass" placeholder="Senha" autocomplete="new-password">
+        <div style="position:relative;">
+            <input type="password" id="login-pass" placeholder="Senha" autocomplete="new-password">
+            <span onclick="toggleSenha('login-pass',this)" style="position:absolute;right:12px;top:10px;cursor:pointer;color:#888;font-size:18px;user-select:none;">👁</span>
+        </div>
         <button class="login-btn" onclick="doLogin()">Entrar</button>
         <div style="display:flex;justify-content:space-between;margin-top:10px;">
             <div class="login-link" style="margin-top:0;" onclick="showRegister()">Criar conta gratis</div>
@@ -152,7 +155,10 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
             <hr style="border-color:#2a2a4a;margin:20px 0;">
             <input type="text" id="reg-user" placeholder="Novo usuario" autocomplete="off">
             <input type="email" id="reg-email" placeholder="Seu e-mail" autocomplete="off">
-            <input type="password" id="reg-pass" placeholder="Nova senha" autocomplete="new-password">
+            <div style="position:relative;">
+                <input type="password" id="reg-pass" placeholder="Nova senha" autocomplete="new-password">
+                <span onclick="toggleSenha('reg-pass',this)" style="position:absolute;right:12px;top:10px;cursor:pointer;color:#888;font-size:18px;user-select:none;">👁</span>
+            </div>
             <button class="login-btn" onclick="doRegister()">Criar conta</button>
         </div>
         <div id="esqueci-senha-section" style="display:none;">
@@ -165,8 +171,14 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
         <div id="redefinir-senha-section" style="display:none;">
             <hr style="border-color:#2a2a4a;margin:20px 0;">
             <div style="color:#aaa;font-size:13px;margin-bottom:10px;">Digite sua nova senha.</div>
-            <input type="password" id="nova-senha-1" placeholder="Nova senha" autocomplete="new-password">
-            <input type="password" id="nova-senha-2" placeholder="Confirme a nova senha" autocomplete="new-password">
+            <div style="position:relative;">
+                <input type="password" id="nova-senha-1" placeholder="Nova senha" autocomplete="new-password">
+                <span onclick="toggleSenha('nova-senha-1',this)" style="position:absolute;right:12px;top:10px;cursor:pointer;color:#888;font-size:18px;user-select:none;">👁</span>
+            </div>
+            <div style="position:relative;">
+                <input type="password" id="nova-senha-2" placeholder="Confirme a nova senha" autocomplete="new-password">
+                <span onclick="toggleSenha('nova-senha-2',this)" style="position:absolute;right:12px;top:10px;cursor:pointer;color:#888;font-size:18px;user-select:none;">👁</span>
+            </div>
             <button class="login-btn" onclick="confirmarRedefinicao()">Redefinir senha</button>
         </div>
         <div style="text-align:center;margin-top:20px;font-size:11px;color:#555;">
@@ -1085,6 +1097,16 @@ function acessarPagina(page,el){
         return;
     }
     showPage(page,el);
+}
+function toggleSenha(id,el){
+    var input=document.getElementById(id);
+    if(input.type==="password"){
+        input.type="text";
+        el.textContent="🙈";
+    }else{
+        input.type="password";
+        el.textContent="👁";
+    }
 }
 function setExemplo(val){document.getElementById("produto").value=val;document.getElementById("char-count").textContent=val.length+"/100";}
 function selecionarPerfil(perfil,el){
