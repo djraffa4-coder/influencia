@@ -18,6 +18,7 @@ def get_db():
         db.close()
 
 LIMITES = {
+    "starter": {"scripts": 50, "imagens": 20, "imagens_pro": 5},
     "free": {"scripts": 3, "imagens": 2, "imagens_pro": 0},
     "pro": {"scripts": 150, "imagens": 60, "imagens_pro": 25},
     "business": {"scripts": 400, "imagens": 200, "imagens_pro": 60}
@@ -113,10 +114,13 @@ Agora crie para: {req.produto}"""
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
     response = requests.post(url, json=payload)
     data = response.json()
-    script = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "Erro ao gerar script")
+    script = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
 
-    db_user.scripts_usados += 1
-    db.commit()
+    if script:
+        db_user.scripts_usados += 1
+        db.commit()
+    else:
+        return {"script": "Erro ao gerar script", "produto": req.produto, "usuario": user}
 
     return {"script": script, "produto": req.produto, "usuario": user}
 
@@ -188,10 +192,13 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
         GEMINI_KEY = os.getenv("GEMINI_KEY", "")
         url_imagen = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key={GEMINI_KEY}"
         perfil_desc = perfil["prompt"] if req.perfil != "custom" else f"{req.custom_etnia}, {req.custom_idade or '25'} years old, {req.custom_cabelo}, {req.custom_olhos}"
+        eh_masculino = req.perfil in ["rafael", "lucas", "pedro", "mateus"]
+        genero_desc = "man" if eh_masculino else "beautiful woman"
+        pronome_desc = "He" if eh_masculino else "She"
         payload_imagen = {
             "contents": [{
                 "parts": [
-                    {"text": f"Generate a photorealistic portrait of a {("man" if req.perfil in ["rafael","lucas","pedro","mateus"] else "beautiful woman")}, {perfil_desc}. {("He" if req.perfil in ["rafael","lucas","pedro","mateus"] else "She")} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
+                    {"text": f"Generate a photorealistic portrait of a {genero_desc}, {perfil_desc}. {pronome_desc} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": req.imagem_produto_b64}}
                 ]
             }],
