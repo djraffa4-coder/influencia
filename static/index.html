@@ -1330,7 +1330,7 @@ function renderImagens(){
     if(!lista)return;
     if(imagens.length===0){lista.innerHTML="<div style='color:#555;padding:40px;'>Nenhuma imagem salva ainda.</div>";return;}
     var h="";
-    for(var i=0;i<imagens.length;i++){h+="<div class='img-card'><img src='"+imagens[i].url+"'><div class='img-card-info'><div style='font-size:13px;font-weight:600;'>"+imagens[i].produto+"</div><div style='font-size:11px;color:#555;'>"+imagens[i].data+"</div><a href='"+imagens[i].url+"' download class='result-btn' style='margin-top:8px;font-size:12px;display:flex;'>Baixar</a></div></div>";}
+    for(var i=0;i<imagens.length;i++){h+="<div class='img-card'><img src='"+imagens[i].url+"' onerror=\"this.onerror=null;this.style.display='none';this.nextElementSibling.style.display='flex';\"><div class='img-card-missing' style='display:none;height:180px;align-items:center;justify-content:center;text-align:center;color:#777;font-size:12px;padding:12px;background:#1a1a2a;'>⚠️ Imagem indisponivel<br>(pode ter sido removida do servidor)</div><div class='img-card-info'><div style='font-size:13px;font-weight:600;'>"+imagens[i].produto+"</div><div style='font-size:11px;color:#555;'>"+imagens[i].data+"</div><a href='"+imagens[i].url+"' download class='result-btn' style='margin-top:8px;font-size:12px;display:flex;'>Baixar</a></div></div>";}
     lista.innerHTML=h;
 }
 async function enviarVideo(){
@@ -1343,6 +1343,7 @@ async function enviarVideo(){
         var r=await fetch(API+"/gerar-video",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({script:script,imagem_url:imagem,voz:voz})});
         var d=await r.json();
         if(d.video_id){currentTalkId=d.video_id;document.getElementById("status-text").textContent="Video sendo processado! ID: "+d.video_id;document.getElementById("status-msg").style.display="block";}
+        else if(d.detail){alert("⚠️ "+d.detail);}
         else{alert("Erro: "+JSON.stringify(d));}
     }catch(e){alert("Erro: "+e.message);}
     hideLoading();
@@ -1353,6 +1354,7 @@ async function verificarVideo(){
     try{
         var r=await fetch(API+"/verificar-video?video_id="+currentTalkId,{headers:{"Authorization":"Bearer "+token}});
         var d=await r.json();
+        if(d.detail){alert("⚠️ "+d.detail);hideLoading();return;}
         var status=d.status||"";
         if(status==="completed"){document.getElementById("status-text").innerHTML="Pronto! <a href='"+d.video_url+"' target='_blank' style='color:#a78bfa;'>Clique aqui para ver o video</a>";}
         else{document.getElementById("status-text").textContent="Status: "+status+". Aguarde e tente novamente.";}
