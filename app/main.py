@@ -180,7 +180,7 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
     db_user = db.query(DBUser).filter(DBUser.email == req.email).first()
     # Sempre retorna sucesso (mesmo se o email nao existir) para nao revelar quais emails estao cadastrados
     if not db_user:
-        return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
+        return {"msg": "Se esse e-mail estiver correto e cadastrado, voce vai receber o link em alguns instantes. Confira tambem a caixa de spam."}
 
     reset_token = jwt.encode(
         {"sub": db_user.username, "purpose": "reset_password", "exp": datetime.utcnow() + timedelta(minutes=30)},
@@ -191,7 +191,7 @@ def esqueci_senha(req: EsqueciSenhaRequest, db: Session = Depends(get_db)):
 
     if not BREVO_API_KEY:
         print(f"[AVISO] BREVO_API_KEY nao configurada. Link de reset (debug): {reset_link}")
-        return {"msg": "Se o email existir, um link de redefinicao foi enviado."}
+        return {"msg": "Se esse e-mail estiver correto e cadastrado, voce vai receber o link em alguns instantes. Confira tambem a caixa de spam."}
 
     try:
         corpo_html = f"""
@@ -318,6 +318,7 @@ def get_creditos(user: str = Depends(get_current_user), db: Session = Depends(ge
         db_user.mes_referencia = mes_atual
         db.commit()
     limites = {
+        "starter": {"scripts": 50, "imagens": 20, "imagens_pro": 5},
         "free": {"scripts": 3, "imagens": 2, "imagens_pro": 0},
         "pro": {"scripts": 150, "imagens": 60, "imagens_pro": 25},
         "business": {"scripts": 400, "imagens": 200, "imagens_pro": 60}
@@ -467,10 +468,14 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
                             print(f"[AVISO] Identificado por fallback de e-mail ({payer_email}), nao por external_reference.")
 
                     if db_user:
-                        plano_final = PLANOS_CONFIG.get(plano_id_extraido, {}).get("plano_interno", "pro")
-                        db_user.plano = plano_final
-                        db.commit()
-                        print(f"[SUCESSO] Plano '{plano_final}' liberado para user_id={db_user.id} (username={db_user.username})")
+                        plano_final = PLANOS_CONFIG.get(plano_id_extraido, {}).get("plano_interno")
+                        if not plano_final:
+                            print(f"[ERRO] plano_id_extraido '{plano_id_extraido}' nao reconhecido em PLANOS_CONFIG. "
+                                  f"Pagamento {payment_id} NAO foi liberado automaticamente. Verificar manualmente no painel do Mercado Pago.")
+                        else:
+                            db_user.plano = plano_final
+                            db.commit()
+                            print(f"[SUCESSO] Plano '{plano_final}' liberado para user_id={db_user.id} (username={db_user.username})")
                     else:
                         print(f"[ERRO] Pagamento {payment_id} aprovado mas NAO foi possivel identificar o usuario. "
                               f"external_reference='{external_ref}' payer_email='{payer_email}'. "

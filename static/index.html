@@ -16,7 +16,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 .login-box input:focus{outline:none;border-color:#a78bfa;}
 .login-btn{width:100%;padding:13px;background:linear-gradient(135deg,#a78bfa,#ec4899);border:none;border-radius:10px;color:#fff;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px;}
 .login-link{color:#a78bfa;text-align:center;margin-top:16px;font-size:14px;cursor:pointer;}
-.login-err{color:#f87171;font-size:13px;margin-bottom:8px;display:none;}
+.login-err{color:#f87171;font-size:13px;margin-bottom:8px;display:none;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.35);border-radius:8px;padding:8px 12px;}
 #app-screen{display:none;width:100%;min-height:100vh;}
 .sidebar{width:240px;background:#13131f;border-right:1px solid #1e1e35;padding:24px 16px;display:flex;flex-direction:column;position:fixed;height:100vh;overflow-y:auto;}
 .sidebar-logo{font-size:22px;font-weight:800;background:linear-gradient(135deg,#a78bfa,#ec4899);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:32px;padding-left:8px;}
@@ -990,7 +990,7 @@ async function enviarEsqueciSenha(){
     try{
         var r=await fetch(API+"/esqueci-senha",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})});
         var d=await r.json();
-        alert(d.msg||"Se o e-mail existir, um link foi enviado.");
+        alert(d.msg||"Se esse e-mail estiver correto e cadastrado, voce vai receber o link em alguns instantes. Confira tambem a caixa de spam.");
         ocultarEsqueciSenha();
     }catch(e){alert("Erro ao conectar. Tente novamente.");}
 }
@@ -1078,6 +1078,7 @@ async function doLogin(){
     var p=document.getElementById("login-pass").value.trim();
     var err=document.getElementById("login-err");
     err.style.display="none";
+    if(!u||!p){err.textContent="Preencha usuario e senha.";err.style.display="block";return;}
     try{
         var r=await fetch(API+"/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:u,password:p})});
         var d=await r.json();
