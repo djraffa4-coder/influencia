@@ -9,6 +9,8 @@ from jose import jwt, JWTError
 from datetime import datetime, timedelta
 from sqlalchemy.orm import Session
 import os
+import hashlib
+import time
 import requests
 from app.database import Base, engine, SessionLocal
 from app.models import User as DBUser
@@ -97,6 +99,58 @@ PLANOS_CONFIG = {
     "kit_pro": {"title": "Kit Criador PRO - InfluencIA", "price": 97.00, "plano_interno": "pro"},
     "kit_agencia": {"title": "Kit Agencia - InfluencIA", "price": 197.00, "plano_interno": "business"},
 }
+
+# ── NOVO: Meta Conversions API (evento de Purchase server-to-server) ──
+# META_PIXEL_ID: mesmo ID usado no pixel do navegador (/config-publica).
+# META_CAPI_ACCESS_TOKEN: gerado em Gerenciador de Eventos > Pixel > Configuracoes > API de Conversoes > Gerar token de acesso.
+# Sem essas duas variaveis configuradas, o envio e simplesmente pulado (nao quebra o webhook).
+META_PIXEL_ID = os.getenv("META_PIXEL_ID", "")
+META_CAPI_ACCESS_TOKEN = os.getenv("META_CAPI_ACCESS_TOKEN", "")
+
+def enviar_purchase_meta(db_user, valor, payment_id, request: Request = None):
+    """Envia o evento Purchase para o Meta via Conversions API (server-side),
+    para que campanhas de Conversao no Ads Manager tenham um sinal real de venda."""
+    if not META_PIXEL_ID or not META_CAPI_ACCESS_TOKEN:
+        return
+    try:
+        email_hash = hashlib.sha256(db_user.email.strip().lower().encode()).hexdigest() if db_user.email else None
+        user_data = {}
+        if email_hash:
+            user_data["em"] = [email_hash]
+        if request is not None:
+            client_ip = request.headers.get("x-forwarded-for", request.client.host if request.client else "")
+            if client_ip:
+                user_data["client_ip_address"] = client_ip.split(",")[0].strip()
+            user_agent = request.headers.get("user-agent")
+            if user_agent:
+                user_data["client_user_agent"] = user_agent
+
+        payload = {
+            "data": [{
+                "event_name": "Purchase",
+                "event_time": int(time.time()),
+                "event_id": f"payment_{payment_id}",
+                "action_source": "website",
+                "event_source_url": f"{APP_URL}/app",
+                "user_data": user_data,
+                "custom_data": {
+                    "currency": "BRL",
+                    "value": valor
+                }
+            }]
+        }
+        resp = requests.post(
+            f"https://graph.facebook.com/v19.0/{META_PIXEL_ID}/events",
+            params={"access_token": META_CAPI_ACCESS_TOKEN},
+            json=payload,
+            timeout=10
+        )
+        if resp.status_code not in (200, 201):
+            print(f"[ERRO] Meta CAPI respondeu {resp.status_code}: {resp.text}")
+        else:
+            print(f"[META CAPI] Evento Purchase enviado (payment_id={payment_id}, valor={valor})")
+    except Exception as e:
+        print(f"[ERRO] Falha ao enviar evento Purchase pro Meta: {e}")
 
 
 class User(BaseModel):
@@ -476,6 +530,8 @@ async def mercado_pago_webhook(request: Request, db: Session = Depends(get_db)):
                             db_user.plano = plano_final
                             db.commit()
                             print(f"[SUCESSO] Plano '{plano_final}' liberado para user_id={db_user.id} (username={db_user.username})")
+                            valor_pago = PLANOS_CONFIG.get(plano_id_extraido, {}).get("price", 0)
+                            enviar_purchase_meta(db_user, valor_pago, payment_id, request)
                     else:
                         print(f"[ERRO] Pagamento {payment_id} aprovado mas NAO foi possivel identificar o usuario. "
                               f"external_reference='{external_ref}' payer_email='{payer_email}'. "
