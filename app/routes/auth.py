@@ -193,10 +193,10 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
         extras = ", ".join(extras_list)
         prompt = base + (", " + extras if extras else "")
 
-    produto_txt = f", holding a {descricao_produto} in her hand, the {descricao_produto} clearly visible, showing the {descricao_produto} to camera, TikTok product review, product placement, {descricao_produto} in focus, viral content" if descricao_produto else ""
+    produto_txt = f", holding a {descricao_produto} in hand, product clearly visible, TikTok product review style" if descricao_produto else ""
     prompt = prompt + produto_txt
-    if descricao_produto:
-        prompt = f"product photography, {descricao_produto} clearly visible, " + prompt
+
+    NEGATIVE_PROMPT = "deformed, disfigured, extra limbs, extra fingers, mutated hands, bad anatomy, long neck, elongated neck, distorted body, extra heads, duplicate, blurry, low quality, watermark, text, out of frame, cropped, malformed limbs"
 
     if req.imagem_produto_b64:
         GEMINI_KEY = os.getenv("GEMINI_KEY", "")
@@ -237,7 +237,7 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
             "https://api.stability.ai/v2beta/stable-image/generate/core",
             headers={"authorization": f'Bearer {os.getenv("STABILITY_KEY")}', "accept": "image/*"},
             files={"none": ""},
-            data={"prompt": prompt, "aspect_ratio": "2:3", "output_format": "jpeg"}
+            data={"prompt": prompt, "negative_prompt": NEGATIVE_PROMPT, "aspect_ratio": "2:3", "output_format": "jpeg"}
         )
 
     if response.status_code == 200:
