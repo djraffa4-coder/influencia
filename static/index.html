@@ -350,13 +350,13 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 
                 <div class="dash-charts-grid">
                     <div style="background: rgba(30, 30, 45, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 24px;">
-                        <h3 style="font-size: 16px; color: #9ca3af; margin-bottom: 16px;">Scripts Gerados vs Convertidos</h3>
+                        <h3 style="font-size: 16px; color: #9ca3af; margin-bottom: 16px;">Creditos Usados vs Limite (este mes)</h3>
                         <div style="position: relative; height: 250px; width: 100%;">
                             <canvas id="ctxScriptsChart"></canvas>
                         </div>
                     </div>
                     <div style="background: rgba(30, 30, 45, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 24px;">
-                        <h3 style="font-size: 16px; color: #9ca3af; margin-bottom: 16px;">Uso de Créditos Mensal</h3>
+                        <h3 style="font-size: 16px; color: #9ca3af; margin-bottom: 16px;">Distribuicao de Uso por Categoria</h3>
                         <div style="position: relative; height: 250px; width: 100%;">
                             <canvas id="ctxCreditosChart"></canvas>
                         </div>
@@ -1223,7 +1223,42 @@ async function carregarCreditos(){
         else document.getElementById("credits-val").style.color="#fff";
         var es=document.getElementById("stat-scripts");var ei=document.getElementById("stat-imagens");var eip=document.getElementById("stat-imagens-pro");
         if(es)es.textContent=sr;if(ei)ei.textContent=ir;if(eip)eip.textContent=ipr;
+        atualizarGraficos(d);
     }catch(e){console.log("erro creditos:",e);}
+}
+var scriptsChartInstance=null;
+var creditosChartInstance=null;
+function atualizarGraficos(d){
+    var elBar=document.getElementById('ctxScriptsChart');
+    var elDoughnut=document.getElementById('ctxCreditosChart');
+    if(!elBar||!elDoughnut)return;
+    var labels=['Scripts','Imagens','Imagens Pro'];
+    var usados=[d.scripts.usados,d.imagens.usados,d.imagens_pro.usados];
+    var limites=[d.scripts.limite,d.imagens.limite,d.imagens_pro.limite];
+    if(scriptsChartInstance){
+        scriptsChartInstance.data.datasets[0].data=usados;
+        scriptsChartInstance.data.datasets[1].data=limites;
+        scriptsChartInstance.update();
+    }else{
+        scriptsChartInstance=new Chart(elBar.getContext('2d'),{
+            type:'bar',
+            data:{labels:labels,datasets:[
+                {label:'Usado',data:usados,backgroundColor:'#ec4899'},
+                {label:'Limite',data:limites,backgroundColor:'#a78bfa'}
+            ]},
+            options:{maintainAspectRatio:false,scales:{y:{beginAtZero:true}}}
+        });
+    }
+    if(creditosChartInstance){
+        creditosChartInstance.data.datasets[0].data=usados;
+        creditosChartInstance.update();
+    }else{
+        creditosChartInstance=new Chart(elDoughnut.getContext('2d'),{
+            type:'doughnut',
+            data:{labels:labels,datasets:[{data:usados,backgroundColor:['#a78bfa','#ec4899','#fbbf24']}]},
+            options:{maintainAspectRatio:false}
+        });
+    }
 }
 async function gerarScript(){
     var produto=document.getElementById("produto").value.trim();
@@ -1389,21 +1424,7 @@ function salvarImagemPro() {
     alert("✅ Imagem PRO salva na sua galeria!");
 }
 
-// 2. Iniciar os gráficos da Dashboard
-setTimeout(() => {
-    if(document.getElementById('ctxScriptsChart')){
-        new Chart(document.getElementById('ctxScriptsChart').getContext('2d'), {
-            type: 'bar',
-            data: { labels: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex'], datasets: [{ label: 'Scripts', data: [12, 19, 3, 5, 2], backgroundColor: '#a78bfa' }] },
-            options: { maintainAspectRatio: false }
-        });
-        new Chart(document.getElementById('ctxCreditosChart').getContext('2d'), {
-            type: 'line',
-            data: { labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai'], datasets: [{ label: 'Créditos', data: [50, 60, 45, 80, 95], borderColor: '#ec4899', tension: 0.4 }] },
-            options: { maintainAspectRatio: false }
-        });
-    }
-}, 1000);
+// Graficos da Dashboard agora usam dados reais (ver atualizarGraficos, chamada dentro de carregarCreditos)
 </script>
 
 <!-- Modal Planos -->
