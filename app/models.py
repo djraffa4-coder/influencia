@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, DateTime
+from datetime import datetime
 from app.database import Base
 
 class User(Base):
@@ -12,3 +13,10 @@ class User(Base):
     imagens_usadas = Column(Integer, default=0)
     imagens_pro_usadas = Column(Integer, default=0)
     mes_referencia = Column(String, default="")
+
+class Historico(Base):
+    __tablename__ = "historico"
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, index=True)
+    tipo = Column(String)
+    data_hora = Column(DateTime, default=datetime.utcnow)
