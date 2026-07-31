@@ -18,8 +18,8 @@ def get_db():
         db.close()
 
 LIMITES = {
-    "starter": {"scripts": 50, "imagens": 20, "imagens_pro": 5},
     "free": {"scripts": 3, "imagens": 2, "imagens_pro": 0},
+    "starter": {"scripts": 50, "imagens": 20, "imagens_pro": 5},
     "pro": {"scripts": 150, "imagens": 60, "imagens_pro": 25},
     "business": {"scripts": 400, "imagens": 200, "imagens_pro": 60}
 }
@@ -93,47 +93,41 @@ def gerar_script(req: ScriptRequest, user: str = Depends(get_current_user), db: 
     perfil = PERFIS.get(req.perfil, PERFIS["rafaela"])
     prompt = f"""Voce e {perfil['nome']}, um influencer digital brasileiro do TikTok.
 
-Crie um script de venda de EXATAMENTE 10 segundos falados para o produto: {req.produto}.
+Crie um script de venda COMPLETO E DETALHADO de 30 a 40 segundos falados para o produto: {req.produto}.
 Nicho: {req.nicho}. Tom: {req.tom}.
 
+FORMATO OBRIGATORIO: divida o script em blocos com marcacao de tempo, EXATAMENTE assim:
+
+[0-3s] (gancho): texto do gancho aqui
+[3-10s] (problema/dor): texto aqui
+[10-20s] (solucao/beneficios): texto aqui, pode ter 2-3 frases detalhando beneficios reais e especificos
+[20-28s] (prova social/diferencial): texto aqui
+[28-35s] (CTA): texto aqui
+
 REGRAS OBRIGATORIAS:
-- Maximo 3 frases curtas e diretas
-- Comece com gancho impactante (surpreenda nos primeiros 2 segundos)
-- Mencione 1 beneficio especifico e real do produto
-- Termine com CTA urgente e direto (ex: "Link na bio!", "Corre la!", "Garante ja!")
-- Linguagem natural de TikTok brasileiro
-- SEM asteriscos, SEM parenteses, SEM indicacoes de cena, SEM numeracao
-- Apenas o texto que sera falado, nada mais
+- Cada bloco comeca com a marcacao de tempo entre colchetes e o rotulo entre parenteses, seguido de dois pontos, depois o texto
+- Gancho deve surpreender ou gerar curiosidade nos primeiros 3 segundos
+- Bloco de solucao deve ser o mais detalhado, com beneficios especificos e reais do produto (nao generico)
+- Inclua um bloco de prova social ou diferencial (ex: "milhares ja usam", "unico que faz X", depoimento fictício breve)
+- CTA final urgente e direto (ex: "Link na bio!", "Corre la!", "Garante ja!")
+- Linguagem natural e fluida de TikTok brasileiro, como se estivesse falando pra camera
+- SEM asteriscos, SEM indicacoes de cena adicionais alem da marcacao de tempo pedida
+- Uma quebra de linha entre cada bloco
 
 Exemplo de formato correto para um perfume:
-Gente, esse perfume mudou minha vida! Dura o dia todo e todo mundo pergunta qual e. Corre no link da bio antes que esgote!
+[0-3s] (gancho): Gente, para tudo que eu preciso te contar uma coisa!
+[3-10s] (problema): Voce ja passou vergonha porque o perfume some depois de duas horas?
+[10-20s] (solucao): Esse aqui dura o dia INTEIRO, literalmente sai de casa de manha e chega em casa a noite ainda perfumado. E o frasco e lindo, da vontade de deixar exposto.
+[20-28s] (prova social): Ja vendi mais de 500 unidades esse mes e o pessoal so elogia.
+[28-35s] (CTA): Corre no link da bio antes que esgote de novo!
 
 Agora crie para: {req.produto}"""
     GEMINI_KEY = os.getenv("GEMINI_KEY", "")
-    if not GEMINI_KEY:
-        raise HTTPException(status_code=500, detail="GEMINI_KEY nao configurada no servidor. Fale com o suporte.")
-
     url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
     payload = {"contents": [{"parts": [{"text": prompt}]}]}
-
-    try:
-        response = requests.post(url, json=payload, timeout=30)
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar com o servico de IA: {str(e)}")
-
-    if response.status_code != 200:
-        print(f"[ERRO GEMINI] {response.status_code} - {response.text[:300]}")
-        raise HTTPException(status_code=502, detail="O servico de IA nao respondeu corretamente. Tente novamente em instantes.")
-
-    try:
-        data = response.json()
-        script = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "").strip()
-    except (ValueError, KeyError, IndexError) as e:
-        print(f"[ERRO GEMINI] Resposta inesperada: {e} - {response.text[:300]}")
-        script = ""
-
-    if not script:
-        raise HTTPException(status_code=502, detail="Nao foi possivel gerar o script agora. Tente novamente.")
+    response = requests.post(url, json=payload)
+    data = response.json()
+    script = data.get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", "Erro ao gerar script")
 
     db_user.scripts_usados += 1
     db.commit()
@@ -161,21 +155,16 @@ class ImagemRequest(BaseModel):
 
 @router.post("/gerar-imagem")
 def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
-    import uuid, base64 as b64mod, os
+    import uuid, base64 as b64mod, tempfile, os
 
     db_user = db.query(DBUser).filter(DBUser.username == user).first()
     eh_pro = bool(req.imagem_produto_b64)
     verificar_creditos(db_user, db, "imagens_pro" if eh_pro else "imagens")
 
-    GEMINI_KEY = os.getenv("GEMINI_KEY", "")
-    if eh_pro and not GEMINI_KEY:
-        raise HTTPException(status_code=500, detail="GEMINI_KEY nao configurada no servidor. Fale com o suporte.")
-    if not eh_pro and not os.getenv("STABILITY_KEY"):
-        raise HTTPException(status_code=500, detail="STABILITY_KEY nao configurada no servidor. Fale com o suporte.")
-
     perfil = PERFIS.get(req.perfil, PERFIS["rafaela"])
 
     if req.imagem_produto_b64:
+        GEMINI_KEY = os.getenv("GEMINI_KEY", "")
         url_gemini = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={GEMINI_KEY}"
         payload_gemini = {
             "contents": [{
@@ -185,16 +174,8 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
                 ]
             }]
         }
-        try:
-            r = requests.post(url_gemini, json=payload_gemini, timeout=30)
-            r.raise_for_status()
-            descricao_produto = r.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", req.produto).strip()
-        except requests.RequestException as e:
-            print(f"[ERRO GEMINI-DESCRICAO] {e}")
-            descricao_produto = req.produto
-        except (ValueError, KeyError, IndexError) as e:
-            print(f"[ERRO GEMINI-DESCRICAO] Resposta inesperada: {e}")
-            descricao_produto = req.produto
+        r = requests.post(url_gemini, json=payload_gemini)
+        descricao_produto = r.json().get("candidates", [{}])[0].get("content", {}).get("parts", [{}])[0].get("text", req.produto).strip()
     else:
         descricao_produto = req.produto
 
@@ -217,95 +198,57 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
     if descricao_produto:
         prompt = f"product photography, {descricao_produto} clearly visible, " + prompt
 
-    os.makedirs("static/imagens", exist_ok=True)
-
     if req.imagem_produto_b64:
+        GEMINI_KEY = os.getenv("GEMINI_KEY", "")
         url_imagen = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key={GEMINI_KEY}"
         perfil_desc = perfil["prompt"] if req.perfil != "custom" else f"{req.custom_etnia}, {req.custom_idade or '25'} years old, {req.custom_cabelo}, {req.custom_olhos}"
-        eh_masculino = req.perfil in ["rafael", "lucas", "pedro", "mateus"]
-        genero_desc = "man" if eh_masculino else "beautiful woman"
-        pronome_desc = "He" if eh_masculino else "She"
         payload_imagen = {
             "contents": [{
                 "parts": [
-                    {"text": f"Generate a photorealistic portrait of a {genero_desc}, {perfil_desc}. {pronome_desc} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
+                    {"text": f"Generate a photorealistic portrait of a {("man" if req.perfil in ["rafael","lucas","pedro","mateus"] else "beautiful woman")}, {perfil_desc}. {("He" if req.perfil in ["rafael","lucas","pedro","mateus"] else "She")} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
                     {"inline_data": {"mime_type": "image/jpeg", "data": req.imagem_produto_b64}}
                 ]
             }],
             "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
         }
-        try:
-            r_imagen = requests.post(url_imagen, json=payload_imagen, timeout=60)
-        except requests.RequestException as e:
-            raise HTTPException(status_code=502, detail=f"Falha ao conectar com o servico de imagem: {str(e)}")
-
-        if r_imagen.status_code != 200:
-            print(f"[ERRO GEMINI-IMAGEM] {r_imagen.status_code} - {r_imagen.text[:300]}")
-            raise HTTPException(status_code=502, detail="O servico de imagem nao respondeu corretamente. Tente novamente em instantes.")
-
-        try:
-            data_imagen = r_imagen.json()
-            parts = data_imagen.get("candidates", [{}])[0].get("content", {}).get("parts", [])
-        except (ValueError, KeyError, IndexError) as e:
-            print(f"[ERRO GEMINI-IMAGEM] Resposta inesperada: {e} - {r_imagen.text[:300]}")
-            raise HTTPException(status_code=502, detail="O servico de imagem devolveu uma resposta inesperada. Tente novamente.")
-
+        r_imagen = requests.post(url_imagen, json=payload_imagen)
+        data_imagen = r_imagen.json()
+        parts = data_imagen.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         img_data = None
         for part in parts:
             if "inlineData" in part:
-                try:
-                    img_data = b64mod.b64decode(part["inlineData"]["data"])
-                except Exception as e:
-                    print(f"[ERRO GEMINI-IMAGEM] Falha ao decodificar imagem: {e}")
+                img_data = b64mod.b64decode(part["inlineData"]["data"])
                 break
-
-        if not img_data:
-            print(f"[ERRO GEMINI-IMAGEM] Sem imagem na resposta: {str(data_imagen)[:300]}")
-            raise HTTPException(status_code=502, detail="A IA nao conseguiu gerar a imagem dessa vez. Tente novamente.")
-
-        img_id = str(uuid.uuid4())
-        path = f"static/imagens/{img_id}.jpg"
-        try:
+        if img_data:
+            img_id = str(uuid.uuid4())
+            path = f"static/imagens/{img_id}.jpg"
             with open(path, "wb") as f:
                 f.write(img_data)
-        except OSError as e:
-            print(f"[ERRO] Falha ao salvar imagem em disco: {e}")
-            raise HTTPException(status_code=500, detail="Falha ao salvar a imagem gerada no servidor.")
-
-        if eh_pro:
-            db_user.imagens_pro_usadas += 1
+            if eh_pro:
+                db_user.imagens_pro_usadas += 1
+            else:
+                db_user.imagens_usadas += 1
+            db.commit()
+            return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
         else:
-            db_user.imagens_usadas += 1
-        db.commit()
-        return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
-
-    try:
+            return {"erro": "Gemini nao retornou imagem", "detalhe": str(data_imagen)[:300]}
+    else:
         response = requests.post(
             "https://api.stability.ai/v2beta/stable-image/generate/core",
             headers={"authorization": f'Bearer {os.getenv("STABILITY_KEY")}', "accept": "image/*"},
             files={"none": ""},
-            data={"prompt": prompt, "aspect_ratio": "2:3", "output_format": "jpeg"},
-            timeout=60
+            data={"prompt": prompt, "aspect_ratio": "2:3", "output_format": "jpeg"}
         )
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar com o servico de imagem: {str(e)}")
 
-    if response.status_code != 200:
-        print(f"[ERRO STABILITY] {response.status_code} - {response.text[:300]}")
-        raise HTTPException(status_code=502, detail="O servico de imagem nao respondeu corretamente. Tente novamente em instantes.")
-
-    img_id = str(uuid.uuid4())
-    path = f"static/imagens/{img_id}.jpg"
-    try:
+    if response.status_code == 200:
+        img_id = str(uuid.uuid4())
+        path = f"static/imagens/{img_id}.jpg"
         with open(path, "wb") as f:
             f.write(response.content)
-    except OSError as e:
-        print(f"[ERRO] Falha ao salvar imagem em disco: {e}")
-        raise HTTPException(status_code=500, detail="Falha ao salvar a imagem gerada no servidor.")
-
-    db_user.imagens_usadas += 1
-    db.commit()
-    return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
+        db_user.imagens_usadas += 1
+        db.commit()
+        return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
+    return {"erro": str(response.text), "status": response.status_code}
 
 class VideoRequest(BaseModel):
     script: str
@@ -314,61 +257,23 @@ class VideoRequest(BaseModel):
 
 @router.post("/gerar-video")
 def gerar_video(req: VideoRequest, user: str = Depends(get_current_user)):
-    # AVISO: a HeyGen v2 nao aceita "talking_photo_url" direto - o campo correto e
-    # "talking_photo_id", que exige subir a foto antes via API de Photo Avatar
-    # (POST /v3/assets + POST /v3/avatars) e so depois gerar o video com o ID retornado.
-    # Por isso essa rota ainda nao funciona de ponta a ponta; o tratamento abaixo
-    # so evita que o servidor quebre com erro 500 sem explicacao nenhuma.
     HEYGEN_KEY = os.getenv("HEYGEN_KEY")
-    if not HEYGEN_KEY:
-        raise HTTPException(status_code=500, detail="HEYGEN_KEY nao configurada no servidor.")
-
     headers = {"X-Api-Key": HEYGEN_KEY, "Content-Type": "application/json"}
     payload = {
         "video_inputs": [{"character": {"type": "talking_photo", "talking_photo_url": req.imagem_url}, "voice": {"type": "text", "input_text": req.script, "voice_id": "9da3f8b1064a4b5ba1236e84335c08df"}}],
         "dimension": {"width": 720, "height": 1280}
     }
-
-    try:
-        response = requests.post("https://api.heygen.com/v2/video/generate", headers=headers, json=payload, timeout=30)
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar com o servico de video: {str(e)}")
-
-    try:
-        data = response.json()
-    except ValueError:
-        print(f"[ERRO HEYGEN] Resposta nao-JSON ({response.status_code}): {response.text[:300]}")
-        raise HTTPException(status_code=502, detail="O servico de video nao respondeu corretamente.")
-
-    if response.status_code != 200:
-        erro_heygen = data.get("error") or data.get("message") or str(data)[:300]
-        print(f"[ERRO HEYGEN] {response.status_code} - {erro_heygen}")
-        raise HTTPException(status_code=502, detail=f"O servico de video recusou o pedido: {erro_heygen}")
-
+    response = requests.post("https://api.heygen.com/v2/video/generate", headers=headers, json=payload)
+    data = response.json()
     video_id = data.get("data", {}).get("video_id")
-    if not video_id:
-        print(f"[ERRO HEYGEN] Sem video_id na resposta: {str(data)[:300]}")
-        raise HTTPException(status_code=502, detail="O servico de video nao retornou um ID valido.")
-
     return {"video_id": video_id, "msg": "Video sendo gerado!", "usuario": user}
 
 @router.get("/verificar-video")
 def verificar_video(video_id: str, user: str = Depends(get_current_user)):
     HEYGEN_KEY = os.getenv("HEYGEN_KEY")
-    if not HEYGEN_KEY:
-        raise HTTPException(status_code=500, detail="HEYGEN_KEY nao configurada no servidor.")
-
     headers = {"X-Api-Key": HEYGEN_KEY}
-    try:
-        response = requests.get(f"https://api.heygen.com/v2/video/{video_id}", headers=headers, timeout=30)
-    except requests.RequestException as e:
-        raise HTTPException(status_code=502, detail=f"Falha ao conectar com o servico de video: {str(e)}")
-
-    try:
-        data = response.json()
-    except ValueError:
-        raise HTTPException(status_code=502, detail="O servico de video nao respondeu corretamente.")
-
+    response = requests.get(f"https://api.heygen.com/v2/video/{video_id}", headers=headers)
+    data = response.json()
     status = data.get("data", {}).get("status", "")
     video_url = data.get("data", {}).get("video_url", "")
     return {"status": status, "video_url": video_url}
