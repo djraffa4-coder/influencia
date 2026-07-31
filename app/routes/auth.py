@@ -237,6 +237,35 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
             return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
         else:
             return {"erro": "Gemini nao retornou imagem", "detalhe": str(data_imagen)[:300]}
+    elif (db_user.plano or "free") == "free":
+        GEMINI_KEY = os.getenv("GEMINI_KEY", "")
+        url_imagen_free = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key={GEMINI_KEY}"
+        payload_imagen_free = {
+            "contents": [{
+                "parts": [
+                    {"text": f"Generate a photorealistic portrait of a {prompt}. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."}
+                ]
+            }],
+            "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
+        }
+        r_imagen_free = requests.post(url_imagen_free, json=payload_imagen_free)
+        data_imagen_free = r_imagen_free.json()
+        parts = data_imagen_free.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+        img_data = None
+        for part in parts:
+            if "inlineData" in part:
+                img_data = b64mod.b64decode(part["inlineData"]["data"])
+                break
+        if img_data:
+            img_id = str(uuid.uuid4())
+            path = f"static/imagens/{img_id}.jpg"
+            with open(path, "wb") as f:
+                f.write(img_data)
+            db_user.imagens_usadas += 1
+            db.commit()
+            return {"url": f"/static/imagens/{img_id}.jpg", "usuario": user}
+        else:
+            return {"erro": "Gemini nao retornou imagem", "detalhe": str(data_imagen_free)[:300]}
     else:
         response = requests.post(
             "https://api.stability.ai/v2beta/stable-image/generate/core",
