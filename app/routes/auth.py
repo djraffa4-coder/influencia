@@ -196,7 +196,12 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
     produto_txt = f", holding a {descricao_produto} in hand, product clearly visible, TikTok product review style" if descricao_produto else ""
     prompt = prompt + produto_txt
 
-    NEGATIVE_PROMPT = "deformed, disfigured, extra limbs, extra fingers, mutated hands, bad anatomy, long neck, elongated neck, distorted body, extra heads, duplicate, blurry, low quality, watermark, text, out of frame, cropped, malformed limbs"
+    eh_masculino = (req.perfil in ["rafael", "lucas", "pedro", "mateus"]) or (req.perfil == "custom" and req.custom_genero == "masculino")
+    if eh_masculino:
+        prompt = "photo of a man, male model, masculine features, " + prompt
+        NEGATIVE_PROMPT = "woman, female, feminine features, deformed, disfigured, extra limbs, extra fingers, mutated hands, bad anatomy, long neck, elongated neck, distorted body, extra heads, duplicate, blurry, low quality, watermark, text, out of frame, cropped, malformed limbs"
+    else:
+        NEGATIVE_PROMPT = "deformed, disfigured, extra limbs, extra fingers, mutated hands, bad anatomy, long neck, elongated neck, distorted body, extra heads, duplicate, blurry, low quality, watermark, text, out of frame, cropped, malformed limbs"
 
     if req.imagem_produto_b64:
         GEMINI_KEY = os.getenv("GEMINI_KEY", "")
