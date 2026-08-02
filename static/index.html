@@ -175,7 +175,11 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 .quiz-opcao:hover{border-color:#a78bfa;}
 #quiz-panel input{width:100%;padding:10px 14px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#fff;font-size:13px;margin-bottom:10px;}
 #demo-resultado img{width:100%;border-radius:12px;margin-top:10px;}
-@media(max-width:1150px){#quiz-panel{display:none;}}
+#showcase-panel{position:absolute;left:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(167,139,250,0.3);z-index:2;text-align:center;}
+#showcase-panel img{width:100%;border-radius:14px;margin-bottom:14px;}
+#showcase-panel h3{color:#fff;font-size:15px;margin-bottom:8px;}
+#showcase-panel p{color:#aaa;font-size:12px;line-height:1.4;}
+@media(max-width:1150px){#quiz-panel{display:none;}#showcase-panel{display:none;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -184,6 +188,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 <div id="login-screen">
     <img id="login-bg" src="/static/capa.png">
 <div id="quiz-panel"><div id="quiz-conteudo"></div></div>
+<div id="showcase-panel"><img src="/static/exemplos/INF3.png" onerror="this.style.display='none'"><h3>Junte-se a quem ja esta criando com IA</h3><p>Scripts, influencers e videos prontos em minutos, sem fotografo, sem estudio.</p></div>
     <div class="login-box">
         <img class="login-logo-img" src="/static/logo.png" onerror="this.style.display='none'">
         <div class="login-sub">Crie scripts, influencers e videos com IA</div>
