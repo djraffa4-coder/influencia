@@ -8,7 +8,7 @@
 *{margin:0;padding:0;box-sizing:border-box;}
 body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:flex;min-height:100vh;}
 #login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;width:100%;min-height:100vh;background:#0f0f1a;position:relative;overflow:hidden;}
-#login-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;object-position:center top;opacity:0.55;z-index:0;}
+#login-bg{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;opacity:0.25;z-index:0;}
 .login-box{position:relative;z-index:1;background:rgba(15,15,26,0.75);backdrop-filter:blur(12px);border-radius:20px;padding:40px;width:100%;max-width:400px;border:1px solid rgba(167,139,250,0.3);}
 .login-logo-img{width:180px;margin-bottom:16px;display:block;margin-left:auto;margin-right:auto;}
 .login-sub{color:#888;font-size:14px;margin-bottom:32px;text-align:center;}
@@ -180,7 +180,22 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 #showcase-panel img{width:100%;height:220px;object-fit:cover;border-radius:14px;margin-bottom:14px;transition:opacity 0.3s;display:block;}
 #showcase-panel h3{color:#fff;font-size:15px;margin-bottom:8px;}
 #showcase-panel p{color:#aaa;font-size:12px;line-height:1.4;}
-@media(max-width:1150px){#quiz-panel{display:none;}#showcase-panel{display:none;}}
+@media(max-width:1150px){
+#login-screen{overflow-y:auto;height:auto;min-height:100vh;padding:24px 0;}
+.login-box{order:1;}
+#quiz-panel{position:static;transform:none;right:auto;width:90%;max-width:400px;margin:0 auto 20px;order:2;min-height:auto;max-height:none;}
+#showcase-panel{position:static;transform:none;left:auto;width:90%;max-width:400px;margin:20px auto 0;order:3;min-height:auto;max-height:none;}
+}
+#login-navbar{position:absolute;top:0;left:0;width:100%;z-index:5;padding:20px 40px;box-sizing:border-box;}
+.login-navbar-inner{display:flex;justify-content:flex-end;align-items:center;gap:32px;max-width:1400px;margin:0 auto;}
+.login-navbar-links{display:flex;gap:28px;}
+.login-navbar-links a{color:#ddd;text-decoration:none;font-size:15px;font-weight:600;cursor:pointer;transition:color 0.2s;}
+.login-navbar-links a:hover{color:#a78bfa;}
+#login-hero-title{position:absolute;top:5%;left:50%;transform:translateX(-50%);text-align:center;z-index:3;width:100%;pointer-events:none;}
+.login-hero-logo{width:240px;filter:drop-shadow(0 0 20px rgba(167,139,250,0.4));}
+.login-hero-tagline{color:#ddd;font-size:16px;margin-top:8px;}
+@media(max-width:1150px){#login-navbar{display:none;}#login-hero-title{display:none;}}
+@media(min-width:1151px){.login-logo-img,.login-sub{display:none;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -188,6 +203,15 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 
 <div id="login-screen">
     <img id="login-bg" src="/static/capa.png">
+    <nav id="login-navbar"><div class="login-navbar-inner"><div class="login-navbar-links">
+        <a onclick="window.scrollTo({top:0,behavior:'smooth'});return false;">Início</a>
+        <a onclick="document.getElementById('quiz-panel').scrollIntoView({behavior:'smooth',block:'center'});return false;">Funcionalidades</a>
+        <a onclick="document.getElementById('showcase-panel').scrollIntoView({behavior:'smooth',block:'center'});return false;">Planos</a>
+    </div></div></nav>
+    <div id="login-hero-title">
+        <img src="/static/logo.png" class="login-hero-logo" onerror="this.style.display='none'">
+        <div class="login-hero-tagline">Crie scripts, influencers e vídeos com IA</div>
+    </div>
 <div id="quiz-panel"><div id="quiz-conteudo"></div></div>
 <div id="showcase-panel"><img id="showcase-img" src="/static/exemplos/INF3.png" onerror="this.style.display='none'"><h3 id="showcase-titulo">Junte-se a quem já está criando com IA</h3><p id="showcase-texto">Scripts, influencers e vídeos prontos em minutos, sem fotógrafo, sem estúdio.</p></div>
     <div class="login-box">
