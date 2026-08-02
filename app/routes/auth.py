@@ -221,7 +221,7 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
             }],
             "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
         }
-        r_imagen = requests.post(url_imagen, json=payload_imagen)
+        r_imagen = requests.post(url_imagen, json=payload_imagen, timeout=30)
         data_imagen = r_imagen.json()
         parts = data_imagen.get("candidates", [{}])[0].get("content", {}).get("parts", [])
         img_data = None
@@ -229,6 +229,16 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
             if "inlineData" in part:
                 img_data = b64mod.b64decode(part["inlineData"]["data"])
                 break
+        if not img_data and "UNAVAILABLE" in str(data_imagen):
+            import time as _time
+            _time.sleep(2)
+            r_imagen = requests.post(url_imagen, json=payload_imagen, timeout=30)
+            data_imagen = r_imagen.json()
+            parts = data_imagen.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+            for part in parts:
+                if "inlineData" in part:
+                    img_data = b64mod.b64decode(part["inlineData"]["data"])
+                    break
         if img_data:
             img_id = str(uuid.uuid4())
             path = f"static/imagens/{img_id}.jpg"
