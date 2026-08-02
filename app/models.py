@@ -20,3 +20,11 @@ class Historico(Base):
     username = Column(String, index=True)
     tipo = Column(String)
     data_hora = Column(DateTime, default=datetime.utcnow)
+
+
+class VisitaDemo(Base):
+    __tablename__ = "visita_demo"
+    id = Column(Integer, primary_key=True, index=True)
+    ip = Column(String, index=True)
+    tipo = Column(String)
+    data_hora = Column(DateTime, default=datetime.utcnow)
