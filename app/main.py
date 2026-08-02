@@ -14,6 +14,7 @@ import time
 import requests
 from app.database import Base, engine, SessionLocal
 from app.models import User as DBUser
+from app.models import VisitaDemo
 from app.routes.auth import router as script_router
 
 app = FastAPI()
@@ -598,3 +599,75 @@ def listar_usuarios(admin_key: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Nao autorizado")
     users = db.query(DBUser).all()
     return [{"id": u.id, "username": u.username, "email": u.email, "plano": u.plano} for u in users]
+
+
+def obter_ip_visitante(request: Request):
+    xff = request.headers.get("x-forwarded-for")
+    if xff:
+        return xff.split(",")[0].strip()
+    return request.client.host if request.client else "desconhecido"
+
+class EventoRequest(BaseModel):
+    tipo: str
+
+@app.post("/registrar-evento")
+def registrar_evento(req: EventoRequest, request: Request, db: Session = Depends(get_db)):
+    if req.tipo not in ["visita", "quiz_completo", "demo_gerada"]:
+        raise HTTPException(status_code=400, detail="Tipo invalido")
+    ip = obter_ip_visitante(request)
+    db.add(VisitaDemo(ip=ip, tipo=req.tipo))
+    db.commit()
+    return {"ok": True}
+
+class DemoRequest(BaseModel):
+    produto: str
+
+@app.post("/gerar-demo")
+def gerar_demo(req: DemoRequest, request: Request, db: Session = Depends(get_db)):
+    import uuid, base64 as b64mod
+    ip = obter_ip_visitante(request)
+    limite_tempo = datetime.utcnow() - timedelta(hours=24)
+    ja_gerou = db.query(VisitaDemo).filter(
+        VisitaDemo.ip == ip,
+        VisitaDemo.tipo == "demo_gerada",
+        VisitaDemo.data_hora >= limite_tempo
+    ).first()
+    if ja_gerou:
+        raise HTTPException(status_code=429, detail="Voce ja gerou seu exemplo gratis hoje. Crie uma conta gratis para gerar mais!")
+    if not req.produto or len(req.produto.strip()) < 2:
+        raise HTTPException(status_code=400, detail="Descreva o produto")
+
+    GEMINI_KEY = os.getenv("GEMINI_KEY", "")
+    url_imagen = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-3.1-flash-image:generateContent?key={GEMINI_KEY}"
+    prompt_texto = f"Generate a photorealistic portrait of a beautiful woman, 26 year old Brazilian Japanese woman from Rio de Janeiro, long straight black hair, TikTok influencer style. She is holding and showing a {req.produto.strip()} to the camera, product clearly visible in her hand. Clean modern background, professional photography, no text, no watermarks, photorealistic, 8k quality."
+    payload = {
+        "contents": [{"parts": [{"text": prompt_texto}]}],
+        "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
+    }
+    r = requests.post(url_imagen, json=payload)
+    data = r.json()
+    parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
+    img_data = None
+    for part in parts:
+        if "inlineData" in part:
+            img_data = b64mod.b64decode(part["inlineData"]["data"])
+            break
+    if not img_data:
+        raise HTTPException(status_code=502, detail="Nao foi possivel gerar o exemplo agora, tente novamente")
+
+    img_id = str(uuid.uuid4())
+    path = f"static/imagens/{img_id}.jpg"
+    with open(path, "wb") as f:
+        f.write(img_data)
+    db.add(VisitaDemo(ip=ip, tipo="demo_gerada"))
+    db.commit()
+    return {"url": f"/static/imagens/{img_id}.jpg"}
+
+@app.get("/admin/estatisticas-demo")
+def estatisticas_demo(admin_key: str, db: Session = Depends(get_db)):
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Nao autorizado")
+    total_visitas = db.query(VisitaDemo).filter(VisitaDemo.tipo == "visita").count()
+    total_quiz = db.query(VisitaDemo).filter(VisitaDemo.tipo == "quiz_completo").count()
+    total_demos = db.query(VisitaDemo).filter(VisitaDemo.tipo == "demo_gerada").count()
+    return {"visitas": total_visitas, "quiz_completo": total_quiz, "demos_geradas": total_demos}
