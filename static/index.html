@@ -168,6 +168,14 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 .featured-badge { position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: #ec4899; color: #fff; font-size: 11px; font-weight: 700; padding: 4px 12px; border-radius: 20px; letter-spacing: 1px; }
 .price-card .price { font-size: 32px; font-weight: 700; color: #fff; margin: 16px 0; }
 .btn-assinar { width: 100%; padding: 12px; background: linear-gradient(135deg, #a78bfa, #ec4899); border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; }
+
+#quiz-panel{position:absolute;left:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;max-height:80vh;overflow-y:auto;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(236,72,153,0.3);z-index:2;}
+#quiz-panel h3{color:#fff;font-size:15px;margin-bottom:14px;line-height:1.4;}
+.quiz-opcao{display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#ddd;font-size:13px;cursor:pointer;}
+.quiz-opcao:hover{border-color:#a78bfa;}
+#quiz-panel input{width:100%;padding:10px 14px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#fff;font-size:13px;margin-bottom:10px;}
+#demo-resultado img{width:100%;border-radius:12px;margin-top:10px;}
+@media(max-width:1150px){#quiz-panel{display:none;}}
 </style>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -175,6 +183,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 
 <div id="login-screen">
     <img id="login-bg" src="/static/capa.png">
+<div id="quiz-panel"><div id="quiz-conteudo"></div></div>
     <div class="login-box">
         <img class="login-logo-img" src="/static/logo.png" onerror="this.style.display='none'">
         <div class="login-sub">Crie scripts, influencers e videos com IA</div>
@@ -1508,6 +1517,46 @@ function showApp(username, email){
     showPage("dashboard", document.getElementById("menu-dashboard"));
 }
 
+
+var quizPerguntas=[
+  {pergunta:"Quanto tempo voce gasta hoje criando conteudo pra vender um produto?",opcoes:["Menos de 1 hora","Mais de 3 horas","Nem sei, e uma dor de cabeca"]},
+  {pergunta:"Ja pagou caro por fotografo ou influencer de verdade?",opcoes:["Sim, varias vezes","Nunca tive coragem de pedir orcamento","Nao, uso so fotos do celular"]},
+  {pergunta:"O que mais te trava hoje pra escalar seu conteudo?",opcoes:["Falta de tempo","Falta de dinheiro","Nao sei roteirizar"]}
+];
+var quizIndex=0;
+function renderQuiz(){
+  var el=document.getElementById("quiz-conteudo");
+  if(!el)return;
+  if(quizIndex<quizPerguntas.length){
+    var p=quizPerguntas[quizIndex];
+    var html="<h3>"+p.pergunta+"</h3>";
+    p.opcoes.forEach(function(o,i){html+='<button type="button" class="quiz-opcao" onclick="responderQuiz()">'+o+"</button>";});
+    el.innerHTML=html;
+  }else{
+    el.innerHTML='<h3>Show! Agora e sua vez</h3><div style="color:#aaa;font-size:12px;margin-bottom:10px;">Descreva seu produto e veja a IA criar sua influencer</div><input type="text" id="demo-produto" placeholder="Ex: Tenis esportivo azul" maxlength="80"><button type="button" class="login-btn" onclick="gerarDemo()">Gerar exemplo gratis</button><div id="demo-resultado"></div>';
+    fetch(API+"/registrar-evento",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tipo:"quiz_completo"})}).catch(function(){});
+  }
+}
+function responderQuiz(){quizIndex++;renderQuiz();}
+async function gerarDemo(){
+  var campo=document.getElementById("demo-produto");
+  var produto=campo?campo.value.trim():"";
+  var resDiv=document.getElementById("demo-resultado");
+  if(!produto){resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">Descreva o produto primeiro</div>';return;}
+  resDiv.innerHTML='<div style="color:#aaa;font-size:12px;margin-top:8px;">Gerando sua influencer...</div>';
+  try{
+    var r=await fetch(API+"/gerar-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({produto:produto})});
+    var d=await r.json();
+    if(r.ok){
+      resDiv.innerHTML='<img src="'+d.url+'"><div class="login-link" style="margin-top:10px;" onclick="showRegister()">Gostou? Crie sua conta gratis</div>';
+    }else{
+      resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">'+(d.detail||"Erro ao gerar")+"</div>";
+    }
+  }catch(e){
+    resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">Erro de conexao, tente novamente</div>';
+  }
+}
+
 // ── Botoes Assinar na dashboard tambem abrem o modal ────────
 document.addEventListener("DOMContentLoaded", function(){
     // Verificar se veio de um link de redefinicao de senha (?reset_token=xxx)
@@ -1523,6 +1572,11 @@ document.addEventListener("DOMContentLoaded", function(){
     initGoogleSignIn();
     // Iniciar pixels de rastreamento de anuncios (Meta e TikTok, se configurados)
     initPixels();
+    // Iniciar quiz de demonstracao (apenas para visitantes deslogados)
+    if(!token){
+        fetch(API+"/registrar-evento",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tipo:"visita"})}).catch(function(){});
+        renderQuiz();
+    }
     // Auto-login se token salvo na sessao
     if(token){
         fetch(API+"/me",{headers:{"Authorization":"Bearer "+token}})
