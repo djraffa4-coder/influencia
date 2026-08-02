@@ -663,6 +663,15 @@ def gerar_demo(req: DemoRequest, request: Request, db: Session = Depends(get_db)
     db.commit()
     return {"url": f"/static/imagens/{img_id}.jpg"}
 
+@app.post("/admin/resetar-demo")
+def resetar_demo(admin_key: str, request: Request, ip: str = None, db: Session = Depends(get_db)):
+    if admin_key != ADMIN_KEY:
+        raise HTTPException(status_code=403, detail="Nao autorizado")
+    alvo_ip = ip if ip else obter_ip_visitante(request)
+    apagados = db.query(VisitaDemo).filter(VisitaDemo.ip == alvo_ip, VisitaDemo.tipo == "demo_gerada").delete()
+    db.commit()
+    return {"ip": alvo_ip, "registros_removidos": apagados}
+
 @app.get("/admin/estatisticas-demo")
 def estatisticas_demo(admin_key: str, db: Session = Depends(get_db)):
     if admin_key != ADMIN_KEY:
