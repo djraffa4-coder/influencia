@@ -1548,7 +1548,7 @@ async function gerarDemo(){
     var r=await fetch(API+"/gerar-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({produto:produto})});
     var d=await r.json();
     if(r.ok){
-      resDiv.innerHTML='<img src="'+d.url+'"><div class="login-link" style="margin-top:10px;" onclick="showRegister()">Gostou? Crie sua conta gratis</div>';
+      resDiv.innerHTML='<img src="'+d.url+'"><div class="login-link" style="margin-top:10px;" onclick="showRegister()">Isso foi so uma previa... Deixa eu te mostrar tudo que consigo fazer? Faca login e descubra \uD83D\uDC40</div>';
     }else{
       resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">'+(d.detail||"Erro ao gerar")+"</div>";
     }
