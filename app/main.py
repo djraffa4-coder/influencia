@@ -644,8 +644,13 @@ def gerar_demo(req: DemoRequest, request: Request, db: Session = Depends(get_db)
         "contents": [{"parts": [{"text": prompt_texto}]}],
         "generationConfig": {"responseModalities": ["IMAGE", "TEXT"]}
     }
-    r = requests.post(url_imagen, json=payload)
-    data = r.json()
+    try:
+        r = requests.post(url_imagen, json=payload, timeout=25)
+        data = r.json()
+    except requests.exceptions.Timeout:
+        raise HTTPException(status_code=504, detail="Demorou demais para gerar, tente novamente em instantes")
+    except Exception:
+        raise HTTPException(status_code=502, detail="Erro ao gerar o exemplo, tente novamente")
     parts = data.get("candidates", [{}])[0].get("content", {}).get("parts", [])
     img_data = None
     for part in parts:
