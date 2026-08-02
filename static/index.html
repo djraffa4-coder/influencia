@@ -89,7 +89,8 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 @keyframes spin{to{transform:rotate(360deg);}}
 .loading-text{color:#fff;font-size:15px;}
 #modal-img{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);z-index:9999;justify-content:center;align-items:center;}
-.modal-inner{position:relative;max-width:90%;max-height:90%;}
+.modal-inner{position:relative;max-width:90%;max-height:90vh;overflow-y:auto;}
+#modal-img-src{max-width:100%;display:block;}
 .modal-close{position:absolute;top:-15px;right:-15px;background:#fff;border:none;border-radius:50%;width:32px;height:32px;font-size:18px;cursor:pointer;font-weight:bold;color:#000;}
 .features{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:32px;}
 .feature{background:#13131f;border:1px solid #1e1e35;border-radius:12px;padding:16px;}
@@ -169,14 +170,14 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 .price-card .price { font-size: 32px; font-weight: 700; color: #fff; margin: 16px 0; }
 .btn-assinar { width: 100%; padding: 12px; background: linear-gradient(135deg, #a78bfa, #ec4899); border: none; border-radius: 10px; color: #fff; font-weight: 700; cursor: pointer; }
 
-#quiz-panel{position:absolute;right:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;max-height:80vh;overflow-y:auto;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(236,72,153,0.3);z-index:2;}
+#quiz-panel{position:absolute;right:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;min-height:420px;max-height:80vh;overflow-y:auto;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(167,139,250,0.3);z-index:2;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;}
 #quiz-panel h3{color:#fff;font-size:15px;margin-bottom:14px;line-height:1.4;}
 .quiz-opcao{display:block;width:100%;text-align:left;padding:10px 14px;margin-bottom:8px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#ddd;font-size:13px;cursor:pointer;}
 .quiz-opcao:hover{border-color:#a78bfa;}
 #quiz-panel input{width:100%;padding:10px 14px;background:#0f0f1a;border:1px solid #2a2a4a;border-radius:10px;color:#fff;font-size:13px;margin-bottom:10px;}
 #demo-resultado img{width:100%;border-radius:12px;margin-top:10px;}
-#showcase-panel{position:absolute;left:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(167,139,250,0.3);z-index:2;text-align:center;}
-#showcase-panel img{width:100%;border-radius:14px;margin-bottom:14px;}
+#showcase-panel{position:absolute;left:calc(50% + 260px);top:50%;transform:translateY(-50%);width:320px;min-height:420px;max-height:80vh;background:rgba(30,30,45,0.9);backdrop-filter:blur(12px);border-radius:20px;padding:26px;border:1px solid rgba(167,139,250,0.3);z-index:2;text-align:center;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;}
+#showcase-panel img{width:100%;border-radius:14px;margin-bottom:14px;transition:opacity 0.3s;}
 #showcase-panel h3{color:#fff;font-size:15px;margin-bottom:8px;}
 #showcase-panel p{color:#aaa;font-size:12px;line-height:1.4;}
 @media(max-width:1150px){#quiz-panel{display:none;}#showcase-panel{display:none;}}
@@ -188,10 +189,10 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
 <div id="login-screen">
     <img id="login-bg" src="/static/capa.png">
 <div id="quiz-panel"><div id="quiz-conteudo"></div></div>
-<div id="showcase-panel"><img src="/static/exemplos/INF3.png" onerror="this.style.display='none'"><h3>Junte-se a quem ja esta criando com IA</h3><p>Scripts, influencers e videos prontos em minutos, sem fotografo, sem estudio.</p></div>
+<div id="showcase-panel"><img id="showcase-img" src="/static/exemplos/INF3.png" onerror="this.style.display='none'"><h3 id="showcase-titulo">Junte-se a quem já está criando com IA</h3><p id="showcase-texto">Scripts, influencers e vídeos prontos em minutos, sem fotógrafo, sem estúdio.</p></div>
     <div class="login-box">
         <img class="login-logo-img" src="/static/logo.png" onerror="this.style.display='none'">
-        <div class="login-sub">Crie scripts, influencers e videos com IA</div>
+        <div class="login-sub">Crie scripts, influencers e vídeos com IA</div>
         <div class="login-err" id="login-err"></div>
         <input type="text" id="login-user" placeholder="Usuario" autocomplete="off">
         <div style="position:relative;">
@@ -221,7 +222,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
         </div>
         <div id="esqueci-senha-section" style="display:none;">
             <hr style="border-color:#2a2a4a;margin:20px 0;">
-            <div style="color:#aaa;font-size:13px;margin-bottom:10px;">Digite seu e-mail cadastrado para receber o link de redefinicao.</div>
+            <div style="color:#aaa;font-size:13px;margin-bottom:10px;">Digite seu e-mail cadastrado para receber o link de redefinição.</div>
             <input type="email" id="esqueci-email" placeholder="Seu e-mail" autocomplete="off">
             <button class="login-btn" onclick="enviarEsqueciSenha()">Enviar link</button>
             <div class="login-link" onclick="ocultarEsqueciSenha()">Voltar ao login</div>
@@ -339,29 +340,6 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     </div>
                 </div>
 
-                <h2 style="font-size:24px; font-weight:700; text-align:center;">Escolha seu <span style="color:#ec4899;">Lucro Inteligente</span></h2>
-                <div class="dash-pricing">
-                    <div class="price-card">
-                        <h3 style="color:#a78bfa;">Kit Teste</h3>
-                        <div class="price">R$ 47</div>
-                        <p style="font-size:14px; margin-bottom: 20px;">50 Scripts + 20 Imagens</p>
-                        <button class="btn-assinar" onclick="assinarPlano('kit_teste')">ASSINAR AGORA</button>
-                    </div>
-                    <div class="price-card featured">
-                        <div class="featured-badge">MAIS VENDIDO</div>
-                        <h3 style="color:#ec4899;">Kit Criador PRO</h3>
-                        <div class="price">R$ 97</div>
-                        <p style="font-size:14px; margin-bottom: 20px;">150 Scripts + 100 Imagens + VIP</p>
-                        <button class="btn-assinar" onclick="assinarPlano('kit_pro')">RECOMENDADO</button>
-                    </div>
-                    <div class="price-card">
-                        <h3 style="color:#fff;">Kit Agência</h3>
-                        <div class="price">R$ 197</div>
-                        <p style="font-size:14px; margin-bottom: 20px;">Ilimitado + Suporte 24h</p>
-                        <button class="btn-assinar" onclick="assinarPlano('kit_agencia')">ASSINAR AGORA</button>
-                    </div>
-                </div>
-
                 <div class="dash-charts-grid">
                     <div style="background: rgba(30, 30, 45, 0.6); border: 1px solid rgba(255,255,255,0.05); border-radius: 24px; padding: 24px;">
                         <h3 style="font-size: 16px; color: #9ca3af; margin-bottom: 16px;">Creditos Usados vs Limite (este mes)</h3>
@@ -375,6 +353,11 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                             <canvas id="ctxCreditosChart"></canvas>
                         </div>
                     </div>
+                </div>
+
+                <div style="text-align:center;margin:32px 0 8px;">
+                    <div style="color:#9ca3af;font-size:14px;margin-bottom:12px;">Quando quiser desbloquear mais créditos:</div>
+                    <button class="btn-assinar" style="width:auto;padding:12px 28px;display:inline-block;" onclick="abrirModalPlanos()">Ver planos e preços</button>
                 </div>
             </div>
 
@@ -395,7 +378,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                             <div class="step-line"></div>
                             <div class="step"><div class="step-num">3</div> Gerar</div>
                         </div>
-                        <label class="field-label">Produto ou servico</label>
+                        <label class="field-label">Produto ou serviço</label>
                         <input type="text" class="form-input" id="produto" placeholder="Ex: Camisa do Flamengo" maxlength="100" oninput="document.getElementById('char-count').textContent=this.value.length+'/100'">
                         <div class="char-count"><span id="char-count">0</span>/100</div>
                         <div class="examples">
@@ -412,14 +395,14 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                                     <option value="moda">Moda</option>
                                     <option value="beleza">Beleza</option>
                                     <option value="fitness">Fitness</option>
-                                    <option value="educacao">Educacao</option>
-                                    <option value="financas">Financas</option>
-                                    <option value="alimentacao">Alimentacao</option>
+                                    <option value="educacao">Educação</option>
+                                    <option value="financas">Finanças</option>
+                                    <option value="alimentacao">Alimentação</option>
                                     <option value="tecnologia">Tecnologia</option>
-                                    <option value="casa">Casa e Decoracao</option>
+                                    <option value="casa">Casa e Decoração</option>
                                     <option value="pet">Pet</option>
                                     <option value="esportes">Esportes</option>
-                                    <option value="saude">Saude</option>
+                                    <option value="saude">Saúde</option>
                                     <option value="viagem">Viagem</option>
                                 </select>
                             </div>
@@ -428,8 +411,8 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                                 <select class="form-select" id="tom">
                                     <option value="animado">Animado</option>
                                     <option value="motivacional">Motivacional</option>
-                                    <option value="serio">Serio</option>
-                                    <option value="engracado">Engracado</option>
+                                    <option value="serio">Sério</option>
+                                    <option value="engracado">Engraçado</option>
                                     <option value="emotivo">Emotivo</option>
                                     <option value="urgente">Urgente</option>
                                     <option value="exclusivo">Exclusivo</option>
@@ -437,7 +420,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                                 </select>
                             </div>
                         </div>
-                        <label class="field-label">Publico-alvo <span>(opcional)</span></label>
+                        <label class="field-label">Público-alvo <span>(opcional)</span></label>
                         <input type="text" class="form-input" id="publico" placeholder="Ex: Homens e mulheres flamenguistas" style="margin-bottom:16px;">
                         <label class="field-label">Foto do produto <span>(opcional)</span></label>
                         <div id="upload-preview-area" style="display:none;" class="upload-preview">
@@ -450,6 +433,12 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                             <div style="font-size:13px;color:#888;">Enviar foto do produto</div>
                             <div style="font-size:12px;color:#555;margin-top:4px;">PNG, JPG ate 5MB</div>
                             <input type="file" id="file-input" accept="image/*" style="display:none;" onchange="handleUpload(this)">
+                        </div>
+                        <div style="margin-top:8px;margin-bottom:4px;">
+                            <span class="login-link" style="margin-top:0;font-size:12px;" onclick="document.getElementById('script-prompt-avancado-area').style.display=document.getElementById('script-prompt-avancado-area').style.display==='none'?'block':'none';">&#9999; Usar meu próprio prompt (avançado)</span>
+                        </div>
+                        <div id="script-prompt-avancado-area" style="display:none;margin-bottom:12px;">
+                            <textarea class="form-input" id="script-prompt-avancado" rows="4" placeholder="Cole aqui seu prompt de venda completo. Se preenchido, ele substitui a geração automática acima." style="resize:vertical;"></textarea>
                         </div>
                         <button class="gerar-btn" onclick="gerarScript()">&#10024; Gerar script com IA</button>
                     </div>
@@ -503,9 +492,9 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                 <div class="perfis-grid">
                     <div class="perfil-card ativo" onclick="selecionarPerfil('rafaela',this)"><div class="perfil-emoji">&#128248;</div><div class="perfil-nome">Yumi Tenório</div><div class="perfil-info">26 anos - Carioca</div><div class="perfil-nicho">Moda e Fashion</div></div>
                     <div class="perfil-card" onclick="selecionarPerfil('bianca',this)"><div class="perfil-emoji">&#128132;</div><div class="perfil-nome">Bianca Alves</div><div class="perfil-info">26 anos - Paulistana</div><div class="perfil-nicho">Beleza e Lifestyle</div></div>
-                    <div class="perfil-card" onclick="selecionarPerfil('camila',this)"><div class="perfil-emoji">&#128170;</div><div class="perfil-nome">Camila Rocha</div><div class="perfil-info">28 anos - Mineira</div><div class="perfil-nicho">Fitness e Saude</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('camila',this)"><div class="perfil-emoji">&#128170;</div><div class="perfil-nome">Camila Rocha</div><div class="perfil-info">28 anos - Mineira</div><div class="perfil-nicho">Fitness e Saúde</div></div>
                     <div class="perfil-card" onclick="selecionarPerfil('isabella',this)"><div class="perfil-emoji">&#128081;</div><div class="perfil-nome">Isabella Cruz</div><div class="perfil-info">30 anos - Baiana</div><div class="perfil-nicho">Luxo e Premium</div></div>
-                    <div class="perfil-card" onclick="selecionarPerfil('larissa',this)"><div class="perfil-emoji">&#128516;</div><div class="perfil-nome">Larissa Santos</div><div class="perfil-info">25 anos - Gaucha</div><div class="perfil-nicho">Tech e Educacao</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('larissa',this)"><div class="perfil-emoji">&#128516;</div><div class="perfil-nome">Larissa Santos</div><div class="perfil-info">25 anos - Gaucha</div><div class="perfil-nicho">Tech e Educação</div></div>
                 </div>
                 <div class="perfis-section">INFLUENCERS MASCULINOS</div>
                 <div class="perfis-grid">
@@ -513,21 +502,21 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     <div class="perfil-card" onclick="selecionarPerfil('lucas',this)"><div class="perfil-emoji">&#128084;</div><div class="perfil-nome">Lucas Mendes</div><div class="perfil-info">30 anos - Paulistano</div><div class="perfil-nicho">Luxo e Premium</div></div>
                     <div class="perfil-card" onclick="selecionarPerfil('pedro',this)"><div class="perfil-emoji">&#127918;</div><div class="perfil-nome">Pedro Alves</div><div class="perfil-info">24 anos - Gaucho</div><div class="perfil-nicho">Tech e Games</div></div>
                     <div class="perfil-card" onclick="selecionarPerfil('mateus',this)"><div class="perfil-emoji">&#127940;</div><div class="perfil-nome">Mateus Lima</div><div class="perfil-info">26 anos - Baiano</div><div class="perfil-nicho">Lifestyle e Praia</div></div>
-                    <div class="perfil-card" onclick="selecionarPerfil('custom',this)"><div class="perfil-emoji">&#10024;</div><div class="perfil-nome">Criar meu</div><div class="perfil-info">Personalizavel</div><div class="perfil-nicho">Livre criacao</div></div>
+                    <div class="perfil-card" onclick="selecionarPerfil('custom',this)"><div class="perfil-emoji">&#10024;</div><div class="perfil-nome">Criar meu</div><div class="perfil-info">Personalizável</div><div class="perfil-nicho">Livre criação</div></div>
                 </div>
                 <div id="custom-perfil" style="display:none;background:#13131f;border:1px solid #a78bfa;border-radius:16px;padding:20px;margin-bottom:24px;max-width:700px;">
                     <div style="font-size:14px;font-weight:700;color:#a78bfa;margin-bottom:16px;">&#10024; Personalizar influencer</div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                        <div><label class="field-label">Genero</label><select class="form-select" id="custom-genero" onchange="atualizarCamposCustom(this.value)"><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></div>
+                        <div><label class="field-label">Gênero</label><select class="form-select" id="custom-genero" onchange="atualizarCamposCustom(this.value)"><option value="feminino">Feminino</option><option value="masculino">Masculino</option></select></div>
                         <div><label class="field-label">Nome</label><input type="text" class="form-input" id="custom-nome" placeholder="Ex: Julia Silva"></div>
                         <div><label class="field-label">Idade</label><input type="number" class="form-input" id="custom-idade" placeholder="Ex: 25" min="18" max="50"></div>
                         <div><label class="field-label">Etnia</label><select class="form-select" id="custom-etnia"><option value="white brazilian">Branca/o</option><option value="black brazilian">Negra/o</option><option value="asian brazilian">Asiatica/o</option><option value="mixed race brazilian">Mestica/o</option></select></div>
                         <div><label class="field-label">Cabelo</label><select class="form-select" id="custom-cabelo"><option value="long blonde hair">Longo loiro</option><option value="long dark brown hair">Longo moreno</option><option value="long black hair">Longo preto</option><option value="curly black hair">Cacheado preto</option></select></div>
                         <div><label class="field-label">Estilo</label><select class="form-select" id="custom-estilo"><option value="fashion influencer, trendy outfit">Fashion</option><option value="fitness influencer, sports outfit">Fitness</option><option value="luxury lifestyle, elegant outfit">Luxo</option><option value="casual street style">Casual</option></select></div>
-                        <div><label class="field-label">Cenario</label><select class="form-select" id="custom-cenario"><option value="modern apartment background">Apartamento moderno</option><option value="professional studio background">Estudio</option><option value="outdoor sunny background">Ao ar livre</option><option value="gym background">Academia</option><option value="beach background">Praia</option></select></div>
-                        <div><label class="field-label">Expressao</label><select class="form-select" id="custom-expressao"><option value="energetic smile">Sorriso energetico</option><option value="confident look">Olhar confiante</option><option value="friendly smile">Sorriso amigavel</option><option value="serious professional look">Expressao seria</option></select></div>
+                        <div><label class="field-label">Cenário</label><select class="form-select" id="custom-cenario"><option value="modern apartment background">Apartamento moderno</option><option value="professional studio background">Estudio</option><option value="outdoor sunny background">Ao ar livre</option><option value="gym background">Academia</option><option value="beach background">Praia</option></select></div>
+                        <div><label class="field-label">Expressão</label><select class="form-select" id="custom-expressao"><option value="energetic smile">Sorriso energético</option><option value="confident look">Olhar confiante</option><option value="friendly smile">Sorriso amigável</option><option value="serious professional look">Expressão séria</option></select></div>
                     </div>
-                    <div style="margin-top:12px;"><label class="field-label">Detalhes extras <span>(opcional)</span></label><input type="text" class="form-input" id="custom-extra" placeholder="Ex: tatuagem no braco, oculos de sol..."></div>
+                    <div style="margin-top:12px;"><label class="field-label">Detalhes extras <span>(opcional)</span></label><input type="text" class="form-input" id="custom-extra" placeholder="Ex: tatuagem no braço, óculos de sol..."></div>
                 </div>
                 <div style="max-width:500px;">
                     <label class="field-label">Produto que vai anunciar <span>(opcional)</span></label>
@@ -552,12 +541,12 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     <div class="page-icon">&#11088;</div>
                     <div>
                         <div class="page-title">Influencer Pro</div>
-                        <div class="page-sub">Gere influencers com seu produto real usando IA avancada.</div>
+                        <div class="page-sub">Gere influencers com seu produto real usando IA avançada.</div>
                     </div>
                 </div>
                 <div class="pro-banner">
                     <div style="font-weight:700;font-size:15px;margin-bottom:4px;">&#11088; Recurso exclusivo Pro</div>
-                    <div style="font-size:13px;color:#aaa;">Envie a foto do produto e a IA gera o influencer segurando ele com maxima fidelidade ao produto original.</div>
+                    <div style="font-size:13px;color:#aaa;">Envie a foto do produto e a IA gera o influencer segurando ele com máxima fidelidade ao produto original.</div>
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;max-width:900px;">
                     <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;">
@@ -579,7 +568,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                         </select>
                         <label class="field-label">Produto</label>
                         <input type="text" class="form-input" id="pro-produto" placeholder="Ex: Camisa Flamengo..." style="margin-bottom:16px;">
-                        <label class="field-label">Foto do produto <span style="color:#a78bfa;">(obrigatorio)</span></label>
+                        <label class="field-label">Foto do produto <span style="color:#a78bfa;">(obrigatório)</span></label>
                         <div id="pro-upload-preview" style="display:none;" class="upload-preview">
                             <img id="pro-upload-thumb" src="">
                             <div><div style="font-size:13px;font-weight:600;" id="pro-upload-name"></div><div style="font-size:12px;color:#888;" id="pro-upload-size"></div></div>
@@ -590,6 +579,13 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                             <div style="font-size:13px;color:#888;">Enviar foto do produto</div>
                             <div style="font-size:12px;color:#555;margin-top:4px;">PNG, JPG ate 5MB</div>
                             <input type="file" id="pro-file-input" accept="image/*" style="display:none;" onchange="handleProUpload(this)">
+                        </div>
+                        <div style="margin-top:8px;margin-bottom:4px;display:flex;gap:12px;flex-wrap:wrap;">
+                            <span class="login-link" style="margin-top:0;font-size:12px;" onclick="usarScriptNoPro()">&#128279; Usar produto e prompt do último script</span>
+                            <span class="login-link" style="margin-top:0;font-size:12px;" onclick="document.getElementById('pro-prompt-avancado-area').style.display=document.getElementById('pro-prompt-avancado-area').style.display==='none'?'block':'none';">&#9999; Usar meu próprio prompt (avançado)</span>
+                        </div>
+                        <div id="pro-prompt-avancado-area" style="display:none;margin-bottom:12px;">
+                            <textarea class="form-input" id="pro-prompt-avancado" rows="4" placeholder="Cole aqui um prompt completo descrevendo a cena. Se preenchido, ele substitui a descrição automática (a foto do produto ainda é usada como referência)." style="resize:vertical;"></textarea>
                         </div>
                         <button class="gerar-btn" onclick="gerarImagemPro()">&#11088; Gerar Influencer Pro</button>
                     </div>
@@ -620,7 +616,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     <div class="page-icon">&#127909;</div>
                     <div>
                         <div class="page-title">Gerar video com IA</div>
-                        <div class="page-sub">O influencer vai falar o script no video.</div>
+                        <div class="page-sub">O influencer vai falar o script no vídeo.</div>
                     </div>
                 </div>
                 <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:24px;max-width:600px;">
@@ -637,7 +633,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     <button class="gerar-btn" onclick="enviarVideo()">&#127909; Enviar para gerar video</button>
                     <div id="status-msg" style="display:none;margin-top:16px;background:#1e1e35;border-radius:10px;padding:16px;">
                         <div id="status-text" style="margin-bottom:12px;font-size:14px;"></div>
-                        <button class="gerar-btn" style="margin-top:0;" onclick="verificarVideo()">&#128269; Verificar se o video ficou pronto</button>
+                        <button class="gerar-btn" style="margin-top:0;" onclick="verificarVideo()">&#128269; Verificar se o vídeo ficou pronto</button>
                     </div>
                 </div>
             </div>
@@ -915,7 +911,7 @@ body{font-family:"Segoe UI",sans-serif;background:#0f0f1a;color:#fff;display:fle
                     <div class="page-icon">&#128100;</div>
                     <div>
                         <div class="page-title">Meu Perfil</div>
-                        <div class="page-sub">Suas informacoes de conta.</div>
+                        <div class="page-sub">Suas informações de conta.</div>
                     </div>
                 </div>
                 <div style="background:#13131f;border:1px solid #1e1e35;border-radius:16px;padding:32px;max-width:500px;">
@@ -1198,7 +1194,7 @@ function atualizarCamposCustom(genero){
     }else{
         sc.innerHTML="<option value='long blonde hair'>Longo loiro</option><option value='long dark brown hair'>Longo moreno</option><option value='long black hair'>Longo preto</option><option value='long red hair'>Longo ruivo</option><option value='curly black hair'>Cacheado preto</option>";
         se.innerHTML="<option value='fashion influencer, trendy outfit'>Fashion</option><option value='fitness influencer, sports outfit'>Fitness</option><option value='luxury lifestyle, elegant outfit'>Luxo</option><option value='casual street style'>Casual</option>";
-        sx.innerHTML="<option value='energetic smile'>Sorriso energetico</option><option value='confident look'>Olhar confiante</option><option value='friendly smile'>Sorriso amigavel</option><option value='serious professional look'>Expressao seria</option>";
+        sx.innerHTML="<option value='energetic smile'>Sorriso energético</option><option value='confident look'>Olhar confiante</option><option value='friendly smile'>Sorriso amigável</option><option value='serious professional look'>Expressão séria</option>";
     }
 }
 function handleUpload(input){
@@ -1279,13 +1275,21 @@ async function gerarScript(){
     if(!produto){alert("Digite o produto!");return;}
     showLoading("Gerando script com IA...");
     try{
-        var r=await fetch(API+"/gerar-script",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({produto:produto,nicho:document.getElementById("nicho").value,tom:document.getElementById("tom").value,perfil:perfilAtual})});
+        var promptAvancadoEl=document.getElementById("script-prompt-avancado");
+        var r=await fetch(API+"/gerar-script",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({produto:produto,nicho:document.getElementById("nicho").value,tom:document.getElementById("tom").value,perfil:perfilAtual,prompt_customizado:promptAvancadoEl?promptAvancadoEl.value:""})});
         var d=await r.json();
         if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
-        if(d.script){document.getElementById("result-empty").style.display="none";document.getElementById("result-content").style.display="block";document.getElementById("result-script").textContent=d.script;document.getElementById("video-script").value=d.script;carregarCreditos();}
+        if(d.script){document.getElementById("result-empty").style.display="none";document.getElementById("result-content").style.display="block";document.getElementById("result-script").textContent=d.script;document.getElementById("video-script").value=d.script;window._ultimoScriptGerado=d.script;window._ultimoProdutoScript=produto;carregarCreditos();}
         else{alert("Erro ao gerar script.");}
     }catch(e){alert("Erro: "+e.message);}
     hideLoading();
+}
+function usarScriptNoPro(){
+    if(!window._ultimoScriptGerado){alert("Gere um script primeiro na aba Scripts!");return;}
+    document.getElementById("pro-produto").value=window._ultimoProdutoScript||"";
+    document.getElementById("pro-prompt-avancado").value=window._ultimoScriptGerado;
+    document.getElementById("pro-prompt-avancado-area").style.display="block";
+    alert("Produto e prompt do ultimo script preenchidos! Envie a foto do produto e gere.");
 }
 function copiarScript(){navigator.clipboard.writeText(document.getElementById("result-script").textContent);alert("Script copiado!");}
 function salvarScript(){
@@ -1365,7 +1369,8 @@ async function gerarImagemPro(){
     if(!proUploadB64){alert("Envie a foto do produto primeiro!");return;}
     showLoading("Gerando Influencer Pro...");
     try{
-        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({perfil:document.getElementById("pro-perfil").value,produto:document.getElementById("pro-produto").value,imagem_produto_b64:proUploadB64})});
+        var proPromptEl=document.getElementById("pro-prompt-avancado");
+        var r=await fetch(API+"/gerar-imagem",{method:"POST",headers:{"Content-Type":"application/json","Authorization":"Bearer "+token},body:JSON.stringify({perfil:document.getElementById("pro-perfil").value,produto:document.getElementById("pro-produto").value,imagem_produto_b64:proUploadB64,prompt_customizado:proPromptEl?proPromptEl.value:""})});
         var d=await r.json();
         if(d.detail){alert("⚠️ "+d.detail);hideLoading();carregarCreditos();return;}
         if(d.url){document.getElementById("pro-img").src=d.url;document.getElementById("pro-download").href=d.url;document.getElementById("pro-result-empty").style.display="none";document.getElementById("pro-result").style.display="block";carregarCreditos();}
@@ -1524,11 +1529,32 @@ function showApp(username, email){
 
 
 var quizPerguntas=[
-  {pergunta:"Quanto tempo voce gasta hoje criando conteudo pra vender um produto?",opcoes:["Menos de 1 hora","Mais de 3 horas","Nem sei, e uma dor de cabeca"]},
-  {pergunta:"Ja pagou caro por fotografo ou influencer de verdade?",opcoes:["Sim, varias vezes","Nunca tive coragem de pedir orcamento","Nao, uso so fotos do celular"]},
-  {pergunta:"O que mais te trava hoje pra escalar seu conteudo?",opcoes:["Falta de tempo","Falta de dinheiro","Nao sei roteirizar"]}
+  {pergunta:"Quanto tempo você gasta hoje criando conteúdo pra vender um produto?",opcoes:["Menos de 1 hora","Mais de 3 horas","Nem sei, é uma dor de cabeça"]},
+  {pergunta:"Já pagou caro por fotógrafo ou influencer de verdade?",opcoes:["Sim, várias vezes","Nunca tive coragem de pedir orçamento","Não, uso só fotos do celular"]},
+  {pergunta:"O que mais te trava hoje pra escalar seu conteúdo?",opcoes:["Falta de tempo","Falta de dinheiro","Não sei roteirizar"]}
 ];
 var quizIndex=0;
+var carrosselImagens=["/static/exemplos/INF3.png","/static/exemplos/INF4.png","/static/exemplos/INF5.png","/static/exemplos/INF6.png","/static/exemplos/INF1-PRO.png"];
+var carrosselIndex=0;
+var carrosselTimer=null;
+function iniciarCarrossel(){
+  var img=document.getElementById("showcase-img");
+  if(!img)return;
+  carrosselTimer=setInterval(function(){
+    carrosselIndex=(carrosselIndex+1)%carrosselImagens.length;
+    img.style.opacity=0;
+    setTimeout(function(){img.src=carrosselImagens[carrosselIndex];img.style.opacity=1;},250);
+  },3500);
+}
+function pararCarrosselEMostrar(url){
+  if(carrosselTimer){clearInterval(carrosselTimer);carrosselTimer=null;}
+  var img=document.getElementById("showcase-img");
+  var titulo=document.getElementById("showcase-titulo");
+  var texto=document.getElementById("showcase-texto");
+  if(img){img.style.transition="opacity 0.3s";img.style.opacity=0;setTimeout(function(){img.src=url;img.style.opacity=1;},250);}
+  if(titulo)titulo.textContent="Ficou incrível, não ficou?";
+  if(texto)texto.textContent="Essa é a sua influencer, gerada em segundos. Imagine o que dá pra fazer com uma conta completa.";
+}
 function renderQuiz(){
   var el=document.getElementById("quiz-conteudo");
   if(!el)return;
@@ -1538,7 +1564,7 @@ function renderQuiz(){
     p.opcoes.forEach(function(o,i){html+='<button type="button" class="quiz-opcao" onclick="responderQuiz()">'+o+"</button>";});
     el.innerHTML=html;
   }else{
-    el.innerHTML='<h3>Show! Agora e sua vez</h3><div style="color:#aaa;font-size:12px;margin-bottom:10px;">Descreva seu produto e veja a IA criar sua influencer</div><input type="text" id="demo-produto" placeholder="Ex: Tenis esportivo azul" maxlength="80"><button type="button" class="login-btn" onclick="gerarDemo()">Gerar exemplo gratis</button><div id="demo-resultado"></div>';
+    el.innerHTML='<h3>Show! Agora é a sua vez</h3><div style="color:#aaa;font-size:12px;margin-bottom:10px;">Descreva seu produto e veja a IA criar sua influencer</div><input type="text" id="demo-produto" placeholder="Ex: Tênis esportivo azul" maxlength="80"><button type="button" class="login-btn" onclick="gerarDemo()">Gerar exemplo grátis</button><div id="demo-resultado"></div>';
     fetch(API+"/registrar-evento",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tipo:"quiz_completo"})}).catch(function(){});
   }
 }
@@ -1548,17 +1574,18 @@ async function gerarDemo(){
   var produto=campo?campo.value.trim():"";
   var resDiv=document.getElementById("demo-resultado");
   if(!produto){resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">Descreva o produto primeiro</div>';return;}
-  resDiv.innerHTML='<div style="color:#aaa;font-size:12px;margin-top:8px;">Gerando sua influencer...</div>';
+  resDiv.innerHTML='<div style="color:#aaa;font-size:12px;margin-top:8px;">Gerando sua influencer, olha pro lado &#8594;</div>';
   try{
     var r=await fetch(API+"/gerar-demo",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({produto:produto})});
     var d=await r.json();
     if(r.ok){
-      resDiv.innerHTML='<img src="'+d.url+'"><div class="login-link" style="margin-top:10px;" onclick="showRegister()">Isso foi so uma previa... Deixa eu te mostrar tudo que consigo fazer? Faca login e descubra \uD83D\uDC40</div>';
+      pararCarrosselEMostrar(d.url);
+      resDiv.innerHTML='<div class="login-link" style="margin-top:10px;" onclick="showRegister()">Isso foi só uma prévia... Deixa eu te mostrar tudo que consigo fazer? Faça login e descubra &#128064;</div>';
     }else{
       resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">'+(d.detail||"Erro ao gerar")+"</div>";
     }
   }catch(e){
-    resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">Erro de conexao, tente novamente</div>';
+    resDiv.innerHTML='<div style="color:#f87171;font-size:12px;margin-top:8px;">Erro de conexão, tente novamente</div>';
   }
 }
 
@@ -1581,6 +1608,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!token){
         fetch(API+"/registrar-evento",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({tipo:"visita"})}).catch(function(){});
         renderQuiz();
+        iniciarCarrossel();
     }
     // Auto-login se token salvo na sessao
     if(token){
