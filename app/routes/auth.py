@@ -84,6 +84,7 @@ class ScriptRequest(BaseModel):
     nicho: str = "moda"
     tom: str = "animado"
     perfil: str = "rafaela"
+    prompt_customizado: str = ""
 
 @router.post("/gerar-script")
 def gerar_script(req: ScriptRequest, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -91,7 +92,10 @@ def gerar_script(req: ScriptRequest, user: str = Depends(get_current_user), db: 
     verificar_creditos(db_user, db, "scripts")
 
     perfil = PERFIS.get(req.perfil, PERFIS["rafaela"])
-    prompt = f"""Voce e {perfil['nome']}, um influencer digital brasileiro do TikTok.
+    if req.prompt_customizado and req.prompt_customizado.strip():
+        prompt = req.prompt_customizado.strip()
+    else:
+        prompt = f"""Voce e {perfil['nome']}, um influencer digital brasileiro do TikTok.
 
 Crie um script de venda COMPLETO E DETALHADO de 30 a 40 segundos falados para o produto: {req.produto}.
 Nicho: {req.nicho}. Tom: {req.tom}.
@@ -152,6 +156,7 @@ class ImagemRequest(BaseModel):
     custom_cenario: str = ""
     custom_expressao: str = ""
     custom_extra: str = ""
+    prompt_customizado: str = ""
 
 @router.post("/gerar-imagem")
 def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: Session = Depends(get_db)):
@@ -210,7 +215,7 @@ def gerar_imagem(req: ImagemRequest, user: str = Depends(get_current_user), db: 
         payload_imagen = {
             "contents": [{
                 "parts": [
-                    {"text": f"Generate a photorealistic portrait of a {("man" if req.perfil in ["rafael","lucas","pedro","mateus"] else "beautiful woman")}, {perfil_desc}. {("He" if req.perfil in ["rafael","lucas","pedro","mateus"] else "She")} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality."},
+                    {"text": (req.prompt_customizado.strip() if req.prompt_customizado and req.prompt_customizado.strip() else f"Generate a photorealistic portrait of a {("man" if req.perfil in ["rafael","lucas","pedro","mateus"] else "beautiful woman")}, {perfil_desc}. {("He" if req.perfil in ["rafael","lucas","pedro","mateus"] else "She")} is holding and showing this exact product to the camera. The product must appear exactly as in the reference image with same colors, same logo, same details, same brand. Clean modern background, professional photography, no text, no social media icons, no watermarks, no overlays, photorealistic, 8k quality.")},
                     {"inline_data": {"mime_type": "image/jpeg", "data": req.imagem_produto_b64}}
                 ]
             }],
