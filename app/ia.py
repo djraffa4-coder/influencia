@@ -29,6 +29,12 @@ def _partes(data):
     return (candidatos[0].get("content") or {}).get("parts") or []
 
 
+def verificar_cota(data):
+    """Cota da chave do Gemini esgotada: avisa o cliente em vez de pedir para tentar de novo."""
+    if (data.get("error") or {}).get("code") == 429:
+        raise HTTPException(status_code=503, detail="Nossa IA atingiu o limite de uso no momento. Tente mais tarde — seu credito nao foi descontado.")
+
+
 def gemini_texto(parts, timeout=TIMEOUT_IA):
     """Retorna o texto gerado, ou None se a IA nao devolveu nada."""
     data = _post_gemini(URL_GEMINI_TEXTO, {"contents": [{"parts": parts}]}, timeout)
@@ -36,6 +42,7 @@ def gemini_texto(parts, timeout=TIMEOUT_IA):
         if part.get("text"):
             return part["text"]
     print(f"[ERRO] Gemini texto sem resposta: {str(data)[:300]}")
+    verificar_cota(data)
     return None
 
 
@@ -51,6 +58,7 @@ def gemini_imagem(parts, timeout=TIMEOUT_IA):
             time.sleep(2)
             continue
         print(f"[ERRO] Gemini imagem sem resposta: {str(data)[:300]}")
+        verificar_cota(data)
         return None
 
 
