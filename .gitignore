@@ -1,1 +1,9 @@
-﻿.env
+.env
+__pycache__/
+*.pyc
+*.db
+*.sqlite3
+.venv/
+venv/
+# imagens geradas agora ficam no banco; nao versionar novas
+static/imagens/
